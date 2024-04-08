@@ -63,3 +63,13 @@ else:
     print(f"Fim das tentativas. O número secreto era {numero_secreto}.")
 ```
 
+## Projetos no SQL Server
+- [**Classificação de Clientes por Histórico de Compras**](https://github.com/Eduardoppereira/SQL_SERVER_CLASSIFICACAO_CLIENTES): Solução para classificação de clientes em uma empresa de comércio eletrônico.
+- [**SQL Server - Definições e exemplos**](https://github.com/Eduardoppereira/SQL_SERVER_DEFINICOES_EXEMPLOS): Compilação abrangente de definições e exemplos práticos para o ambiente SQL Server.
+
+## Scripts diversos em Python
+- [Calculadora de Área do Triângulo](https://github.com/Eduardoppereira/calcular_a_area_de_um_triangulo)
+- [Conversor de Temperatura Celsius para Fahrenheit](https://github.com/Eduardoppereira/Converter_temperatura_de_Celsius_para_Fahrenheit)
+- [Calculadora de Salário Líquido](https://github.com/Eduardoppereira/Calcular_salario_liquido)
+- [Calculadora do Peso Ideal](https://github.com/Eduardoppereira/Altura_peso_ideal)
+- [Prática de desenvolvimento de sistemas - AP1](https://github.com/Eduardoppereira/trabalho_da_faculdadeg)

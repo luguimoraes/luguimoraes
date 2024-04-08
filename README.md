@@ -1,4 +1,4 @@
-<h1 align="left">Hi <img src= "https://img.icons8.com/emoji/48/000000/waving-hand-medium-dark-skin-tone.png" width="30px">, I'm Luis
+<h1 align="left">Hi <img src= "[https://img.icons8.com/emoji/48/000000/waving-hand-medium-dark-skin-tone.png](https://icons8.com/icon/IWVCLTqdZxLj/nerd)" width="30px">, I'm Luis
 
 </h1> <p align="left"> <img src="https://komarev.com/ghpvc/?username=eduardopedrosaa&color=yellow" alt="Profile views" /> </p> 
 

@@ -1,75 +1,34 @@
-## Sobre Mim
-Olá! Eu sou Luís, um entusiasta de dados apaixonado por análise de dados. Ao longo da minha jornada, desenvolvi habilidades abrangentes em diferentes áreas relacionadas a dados. Abaixo, destaco alguns dos meus projetos e competências.
+<h1 align="left">Hi <img src= "https://img.icons8.com/emoji/48/000000/waving-hand-medium-dark-skin-tone.png" width="30px">, I'm Eduardo Pedrosa
 
-## Projetos no Power BI
+</h1> <p align="left"> <img src="https://komarev.com/ghpvc/?username=eduardopedrosaa&color=yellow" alt="Profile views" /> </p> 
 
-### [**Dashboard de Gestão de Orçamento 📊💰**](https://github.com/Eduardoppereira/PBI_ORCAMENTO/tree/main)
-- **Dashboard de Gestão de Orçamento**: Um espaço onde a arte da análise financeira encontra a praticidade da visualização de dados. Aqui, mergulhamos na gestão de orçamento com criatividade e eficiência.
-- [Detalhes do projeto](https://github.com/Eduardoppereira/PBI_ORCAMENTO/tree/main?tab=readme-ov-file#dashboard-de-gest%C3%A3o-de-or%C3%A7amento-)
-![Dashboard de Gestão de Orçamento](https://github.com/Eduardoppereira/PBI_ORCAMENTO/blob/main/Captura%20de%20tela%202023-12-18%20160756.png)
+- Back-end developer and data and BI analyst
+- Engenheiro de Analytics e analista de BI
 
-### [**Dashboard de Análise Real vs Average**](https://github.com/Eduardoppereira/RealvsAverage_PowerBi)
-- **Objetivo do Dashboard**: Fornecer uma análise abrangente e interativa dos dados, utilizando diversas visualizações e métricas essenciais.
-- [Acesse o Dashboard](https://github.com/Eduardoppereira/RealvsAverage_PowerBi/tree/main?tab=readme-ov-file#dashboard-de-an%C3%A1lise-real-vs-average)
-![Dashboard de Análise Real vs Average](https://github.com/Eduardoppereira/RealvsAverage_PowerBi/blob/main/Slide1_.png)
+- I currently work with Power BI, Looker Studio, SQL Server, MySQL, Oracle, Python, Apache Airflow Rest API, AWS.
+- Atualmente trabalho com Power BI, Looker Studio, SQL Server, MySQL, Oracle, Python, Apache Airflow, Rest API, AWS.
 
-### [**Dashboard de Análise de Fundos Imobiliários🏢💹**](https://github.com/Eduardoppereira/PBI_FII)
-- **Explore o mercado de fundos imobiliários de forma interativa**, utilizando filtros personalizados e gráficos envolventes.
-- [Acesse o Dashboard](https://github.com/Eduardoppereira/PBI_FII?tab=readme-ov-file#dashboard-de-an%C3%A1lise-de-fundos-imobili%C3%A1rios-)
-![Dashboard de Análise de Fundos Imobiliários](https://github.com/Eduardoppereira/PBI_FII/blob/main/FII11.png)
+- All my projects are available through my repositories on Github and some on LinkedIn.
+- Todos os meus projetos estão disponíveis através dos meus repositórios no Github e alguns no LinkedIn.
 
-### [**Dashboard de Vendas💹**](https://github.com/Eduardoppereira/PBI_VENDAS)
-- **Dashboard de Vendas**: Uma ferramenta visual que oferece insights valiosos sobre o desempenho das vendas.
-- [Acesse o Dashboard](https://github.com/Eduardoppereira/PBI_VENDAS)
-![Dashboard de Vendas](https://github.com/Eduardoppereira/PBI_VENDAS/blob/main/Slide1.PNG)
+<br><br> 
 
-### [**Relatório de Vendas 📈🌍**](https://github.com/Eduardoppereira/PBI_VENDAS_2)
-- **Relatório de Vendas**: Oferece informações valiosas sobre o desempenho do negócio, com filtros fáceis de entender e gráficos interativos.
-- [Acesse o Dashboard](https://github.com/Eduardoppereira/PBI_VENDAS_2)
+## 🛠 &nbsp;Tech Stack 
+![Python](https://img.shields.io/badge/-Python-05122A?style=flat&logo=python)&nbsp;
+![Power Bi](https://img.shields.io/badge/-PowerBI-05122A?style=flat&logo=Powerbi)&nbsp;
+![Looker Studio](https://img.shields.io/badge/-DataStudio-05122A?style=flat&logo=GoogleDataStudio)&nbsp;
+![SQL](https://img.shields.io/badge/-SQLServer-05122A?style=flat&logo=MicrosoftSQLServer)&nbsp;
+![MySQL](https://img.shields.io/badge/-MySQL-05122A?style=flat&logo=MySQL)&nbsp;
+![Oracle](https://img.shields.io/badge/-Oracle-05122A?style=flat&logo=Oracle)&nbsp;
+![ApacheAirflow](https://img.shields.io/badge/-ApacheAirflow-05122A?style=flat&logo=ApacheAirflow)&nbsp;
+![RestAPI](https://img.shields.io/badge/-RestAPI-05122A?style=flat&logo=Rest)&nbsp;
+![AWS](https://img.shields.io/badge/-AWS-05122A?style=flat&logo=Amazon)&nbsp;
+<br><br> 
+## ⚙️ &nbsp;GitHub Analytics 
+<p align="left"> <img width="530em" src="https://github-readme-stats.vercel.app/api?username=Eduardoppereira&show_icons=true&theme=vision-friendly-dark" alt="Eduardoppereira's stats"/>
+<img width="530em" src="https://github-readme-stats.vercel.app/api/top-langs/?username=Eduardoppereira&layout=compact&theme=vision-friendly-dark" alt=Eduardoppereira's most languages"/> </p> 
+<br><br> 
+<a href="https://www.linkedin.com/in/eduardo-pedrosap/" target="_blank"> <img align="center" src="https://img.shields.io/badge/-Eduardo-05122A?style=flat&logo=linkedin" alt="linkedin"/> </a> 
+<a href="https://www.instagram.com/eduardo_01511/" target="_blank"> <img align="center" src="https://img.shields.io/badge/-Eduardo-05122A?style=flat&logo=instagram" alt="instagram"/> </a> 
+<a href="eduardoppsilva@outlook.com" target="_blank"> <img align="center" src="https://img.shields.io/badge/-Eduardo-05122A?style=flat&logo=gmail" alt="Gmail"/> </a>
 
-## Projetos no Figma e Outros
-- [**Relatório de Investimentos - Bradesco**](https://github.com/Eduardoppereira/investimento_bradesco/tree/main): Oferece uma visão detalhada do desempenho dos investimentos, apresentando análises e métricas essenciais.
-- [**Dashboard de Vendas no Figma 🚀**](https://github.com/Eduardoppereira/texas_in_burgues): Uma ferramenta completa e intuitiva para análise do desempenho de uma hamburgueria.
-
-## Projetos no Python
-- [**Jogo da Adivinhação em Python**](https://github.com/Eduardoppereira/while_break_python): Um exemplo prático de controle de fluxo em Python.
-- [**Explorando a Eficiência e Versatilidade das Bibliotecas em Python para Análise de Dados**](https://github.com/Eduardoppereira/PYTHON_DATA_SCIENCE/tree/main): Estudo abrangente sobre as bibliotecas Python para análise de dados.
-- [**Informações do Usuário**](https://github.com/Eduardoppereira/calculo_nome_idade/tree/main): Script em Python para coletar informações do usuário.
-
-## Desenvolvimento do Jogo
-```python
-import random
-
-numero_secreto = random.randint(1, 100)
-tentativas = 0
-limite_tentativas = 10
-
-print("Bem-vindo ao Jogo da Adivinhação!")
-print(f"Você tem {limite_tentativas} tentativas para adivinhar o número secreto.")
-
-while tentativas < limite_tentativas:
-    palpite = int(input("Digite seu palpite: "))
-    
-    if palpite == numero_secreto:
-        print(f"Parabéns! Você acertou o número secreto {numero_secreto} em {tentativas + 1} tentativas.")
-        break
-    elif palpite < numero_secreto:
-        print("Tente um número maior.")
-    else:
-        print("Tente um número menor.")
-    
-    tentativas += 1
-else:
-    print(f"Fim das tentativas. O número secreto era {numero_secreto}.")
-```
-
-## Projetos no SQL Server
-- [**Classificação de Clientes por Histórico de Compras**](https://github.com/Eduardoppereira/SQL_SERVER_CLASSIFICACAO_CLIENTES): Solução para classificação de clientes em uma empresa de comércio eletrônico.
-- [**SQL Server - Definições e exemplos**](https://github.com/Eduardoppereira/SQL_SERVER_DEFINICOES_EXEMPLOS): Compilação abrangente de definições e exemplos práticos para o ambiente SQL Server.
-
-## Scripts diversos em Python
-- [Calculadora de Área do Triângulo](https://github.com/Eduardoppereira/calcular_a_area_de_um_triangulo)
-- [Conversor de Temperatura Celsius para Fahrenheit](https://github.com/Eduardoppereira/Converter_temperatura_de_Celsius_para_Fahrenheit)
-- [Calculadora de Salário Líquido](https://github.com/Eduardoppereira/Calcular_salario_liquido)
-- [Calculadora do Peso Ideal](https://github.com/Eduardoppereira/Altura_peso_ideal)
-- [Prática de desenvolvimento de sistemas - AP1](https://github.com/Eduardoppereira/trabalho_da_faculdadeg)

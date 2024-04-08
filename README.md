@@ -1,5 +1,5 @@
 ## Sobre Mim
-Olá! Eu sou Eduardo Pedrosa, um entusiasta de dados apaixonado por análise de dados. Ao longo da minha jornada, desenvolvi habilidades abrangentes em diferentes áreas relacionadas a dados. Abaixo, destaco alguns dos meus projetos e competências.
+Olá! Eu sou Luís, um entusiasta de dados apaixonado por análise de dados. Ao longo da minha jornada, desenvolvi habilidades abrangentes em diferentes áreas relacionadas a dados. Abaixo, destaco alguns dos meus projetos e competências.
 
 ## Projetos no Power BI
 

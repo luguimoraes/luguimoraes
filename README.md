@@ -1,5 +1,5 @@
 # Sobre Mim
-Olá! Eu sou Eduardo Pedrosa, um entusiasta de dados apaixonado por análise de dados. Ao longo da minha jornada, desenvolvi habilidades abrangentes em diferentes áreas relacionadas a dados. Abaixo, destaco alguns dos meus projetos e competências.
+Olá! Eu sou Luis Guilherme, um entusiasta de dados apaixonado por análise de dados. Ao longo da minha jornada, desenvolvi habilidades abrangentes em diferentes áreas relacionadas a dados. Abaixo, destaco alguns dos meus projetos e competências.
 
 ## Projetos no Power BI
 
@@ -26,4 +26,5 @@ Olá! Eu sou Eduardo Pedrosa, um entusiasta de dados apaixonado por análise de 
 ### [Relatório de Vendas 📈🌍](https://github.com/Eduardoppereira/PBI_VENDAS_2)
 - Oferece informações valiosas sobre o desempenho do negócio, com filtros fáceis de entender e gráficos interativos.
 - [Detalhes do projeto](https://github.com/Eduardoppereira/PBI_VENDAS_2)
+
 

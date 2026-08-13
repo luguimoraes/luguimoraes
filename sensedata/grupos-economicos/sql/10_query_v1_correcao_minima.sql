@@ -60,7 +60,15 @@ INNER JOIN matriz
        AND matriz.group_key = upper(btrim(filho."group"))
 WHERE NULLIF(btrim(filho.cnpj), '') IS NOT NULL          -- e loja (tem CNPJ)
   AND NULLIF(btrim(filho.id_legacy::text), '') IS NOT NULL -- tem chave de carga
-  AND filho.status = 'active'                            -- [AJUSTAR] lojas ativas
+  -- CRITERIO DE LOJA ATIVA
+  -- O status desta base e INTEGER, nao texto: o  status = 'active'  do
+  -- documento nao roda, da "invalid input syntax for type integer".
+  -- Enquanto o codigo numerico de ativo nao esta confirmado, usamos
+  -- dt_cancel, que e um criterio real e disponivel: loja cancelada tem
+  -- data de cancelamento preenchida.
+  -- Depois do bloco G do 05_checklist_retorno.sql, trocar por (ou somar
+  -- com):  AND filho.status = <codigo de ativo>
+  AND filho.dt_cancel IS NULL
   -- Anti-churn: sem isso, toda execucao reescreve TODAS as lojas do
   -- grupo, poluindo historico/timeline e podendo disparar regras de
   -- alerta de CS Feeling sem nenhuma mudanca real ter acontecido.

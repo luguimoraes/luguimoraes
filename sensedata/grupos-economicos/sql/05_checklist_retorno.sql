@@ -135,6 +135,39 @@ bloco_f AS (
             HAVING count(DISTINCT "group") > 1
         ) d
     ) x
+),
+
+-- Bloco G: adicionado depois de confirmar que status e INTEGER nesta
+-- base. Cruza cada codigo com dt_cancel / cancel_tag / stage para
+-- descobrir qual numero significa "loja ativa" — o codigo sozinho nao
+-- diz nada, a correlacao diz.
+bloco_g AS (
+    SELECT 'G. decodificar o status'                                    AS bloco,
+           'status = ' || COALESCE(status::text, '(null)')              AS chave,
+           count(*)::text || ' contas'
+             || ' | com dt_cancel: '  || (count(*) FILTER (WHERE dt_cancel IS NOT NULL))::text
+             || ' | com cancel_tag: ' || (count(*) FILTER (WHERE NULLIF(btrim(cancel_tag), '') IS NOT NULL))::text
+             || ' | sem CNPJ: '       || (count(*) FILTER (WHERE NULLIF(btrim(cnpj), '') IS NULL))::text
+             || ' | stages: '         || COALESCE(string_agg(DISTINCT stage, ','), '(nenhum)') AS valor
+    FROM public.customer
+    GROUP BY status
+),
+
+-- Bloco H: updated_at e "timestamp without time zone". Precisamos saber
+-- se o valor guardado esta em UTC ou ja em horario de Brasilia, senao a
+-- data exibida no campo grupo_atualizado_em sai 3 horas errada.
+bloco_h AS (
+    SELECT 'H. relogio do banco' AS bloco, x.chave, x.valor
+    FROM (
+        SELECT 'now() no banco' AS chave,
+               to_char(now(), 'DD/MM/YYYY HH24:MI:SS TZ') AS valor
+        UNION ALL
+        SELECT 'TimeZone da sessao', current_setting('TimeZone')
+        UNION ALL
+        SELECT 'max(updated_at) em customer',
+               COALESCE(to_char(max(updated_at), 'DD/MM/YYYY HH24:MI:SS'), '(vazio)')
+        FROM public.customer
+    ) x
 )
 
 SELECT bloco, chave, valor
@@ -145,5 +178,7 @@ FROM (
     UNION ALL SELECT * FROM bloco_d
     UNION ALL SELECT * FROM bloco_e
     UNION ALL SELECT * FROM bloco_f
+    UNION ALL SELECT * FROM bloco_g
+    UNION ALL SELECT * FROM bloco_h
 ) t
 ORDER BY bloco, chave, valor;

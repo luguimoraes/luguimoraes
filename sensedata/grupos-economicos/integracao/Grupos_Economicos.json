@@ -1,0 +1,236 @@
+{
+  "connections": {
+    "6": {
+      "_deleted": false,
+      "connection_params": "REDACTED__preencher_no_ambiente_SenseData",
+      "created_at": "2025-10-02T21:12:06.294781",
+      "created_by": 1,
+      "default_connection": false,
+      "is_active": true,
+      "name": "SENSEDATA_HOM",
+      "source": "postgres",
+      "status": true,
+      "updated_at": null,
+      "updated_by": null
+    }
+  },
+  "integrations": {
+    "20": {
+      "_deleted": false,
+      "created_at": "2026-07-13T19:34:20.988590",
+      "created_by": 1,
+      "folder_id": null,
+      "name": "Grupos_Economicos",
+      "status": true,
+      "updated_at": "2026-07-14T21:16:17.825878",
+      "updated_by": 1
+    }
+  },
+  "steps": {
+    "119": {
+      "args": {},
+      "created_at": "2026-07-14T17:51:10.465575-03:00",
+      "created_by": 1,
+      "execution_fn": null,
+      "integration_id": 20,
+      "is_wiped": false,
+      "item_type": "start",
+      "name": "Início",
+      "output_schema": null,
+      "position": {
+        "x": 315,
+        "y": 315
+      },
+      "updated_at": "2026-07-14T17:51:10.465575-03:00",
+      "updated_by": null
+    },
+    "120": {
+      "args": {},
+      "created_at": "2026-07-14T17:51:10.465575-03:00",
+      "created_by": 1,
+      "execution_fn": null,
+      "integration_id": 20,
+      "is_wiped": false,
+      "item_type": "end",
+      "name": "Fim",
+      "output_schema": null,
+      "position": {
+        "x": 1128,
+        "y": 309
+      },
+      "updated_at": "2026-07-14T17:57:19.940705-03:00",
+      "updated_by": 1
+    },
+    "122": {
+      "args": {
+        "integration_params": {
+          "connection_id": 6,
+          "query": "V0lUSCBtYXRyaXogQVMgKAogICAgU0VMRUNUIAogICAgICAgIGNvbXBhbnksCiAgICAgICAgImdyb3VwIiwKICAgICAgICAtLSBQdXhhbmRvIG8gQ1MgRmVlbGluZyBkZSBkZW50cm8gZG8gcGFjb3RlIGRlIGN1c3RvbSBmaWVsZHMKICAgICAgICBjdXN0b21fZmllbGRzLT4nY3NfZmVlbGluZyctPj4ndmFsdWUnIEFTIGNzX2ZlZWxpbmdfbWF0cml6LAogICAgICAgIGN1c3RvbV9maWVsZHMtPidhbm90YWNvZXNfZ3J1cG8nLT4+J3ZhbHVlJyBBUyBhbm90YWNvZXNfbWF0cml6CiAgICBGUk9NIHB1YmxpYy5jdXN0b21lcgogICAgV0hFUkUgImdyb3VwIiBJUyBOT1QgTlVMTCAKICAgICAgQU5EICJncm91cCIgPD4gJycKICAgICAgQU5EIChjbnBqIElTIE5VTEwgT1IgY25waiA9ICcnKQopClNFTEVDVCAKICAgIGZpbGhvLmlkIEFTIGN1c3RvbWVyX2lkLAogICAgZmlsaG8uaWRfbGVnYWN5IEFTIGN1c3RvbWVyX2lkX2xlZ2FjeSwKICAgIGZpbGhvLm5hbWUgQVMgY3VzdG9tZXJfbmFtZSwKICAgIGZpbGhvLmNucGogQVMgY3VzdG9tZXJfY25waiwKICAgIGZpbGhvLiJncm91cCIgQVMgY3VzdG9tZXJfZ3JvdXAsCiAgICBtYXRyaXouY3NfZmVlbGluZ19tYXRyaXogQVMgY3NfZmVlbGluZywKICAgIG1hdHJpei5hbm90YWNvZXNfbWF0cml6IEFTIGFub3RhY29lc19ncnVwbwpGUk9NIHB1YmxpYy5jdXN0b21lciBmaWxobwpJTk5FUiBKT0lOIG1hdHJpeiAKICAgIE9OICBmaWxoby4iZ3JvdXAiID0gbWF0cml6LiJncm91cCIgCiAgIEFORCBmaWxoby5jb21wYW55ID0gbWF0cml6LmNvbXBhbnkKV0hFUkUgZmlsaG8uY25waiBJUyBOT1QgTlVMTCAKICBBTkQgIGZpbGhvLmNucGogPD4gJyc7",
+          "source": "postgres"
+        },
+        "load_type": "total"
+      },
+      "created_at": "2026-07-14T17:51:24.224897-03:00",
+      "created_by": 1,
+      "execution_fn": null,
+      "integration_id": 20,
+      "is_wiped": false,
+      "item_type": "data_source",
+      "name": "PostgreSQL",
+      "output_schema": {
+        "fields": {
+          "anotacoes_grupo": {
+            "remove_dots_and_dash": false,
+            "remove_special_char": false,
+            "remove_whitespaces": false,
+            "remove_zero_left": false,
+            "treatment": "keep_original",
+            "type": "text"
+          },
+          "cs_feeling": {
+            "remove_dots_and_dash": false,
+            "remove_special_char": false,
+            "remove_whitespaces": false,
+            "remove_zero_left": false,
+            "treatment": "keep_original",
+            "type": "text"
+          },
+          "customer_cnpj": {
+            "remove_dots_and_dash": false,
+            "remove_special_char": false,
+            "remove_whitespaces": false,
+            "remove_zero_left": false,
+            "treatment": "keep_original",
+            "type": "text"
+          },
+          "customer_group": {
+            "remove_dots_and_dash": false,
+            "remove_special_char": false,
+            "remove_whitespaces": false,
+            "remove_zero_left": false,
+            "treatment": "keep_original",
+            "type": "text"
+          },
+          "customer_id": {
+            "remove_dots_and_dash": false,
+            "remove_special_char": false,
+            "remove_whitespaces": false,
+            "remove_zero_left": false,
+            "treatment": "keep_original",
+            "type": "text"
+          },
+          "customer_id_legacy": {
+            "remove_dots_and_dash": false,
+            "remove_special_char": false,
+            "remove_whitespaces": false,
+            "remove_zero_left": false,
+            "treatment": "keep_original",
+            "type": "text"
+          },
+          "customer_name": {
+            "remove_dots_and_dash": false,
+            "remove_special_char": false,
+            "remove_whitespaces": false,
+            "remove_zero_left": false,
+            "treatment": "keep_original",
+            "type": "text"
+          }
+        }
+      },
+      "position": {
+        "x": 424,
+        "y": 305
+      },
+      "updated_at": "2026-07-14T21:00:27.689529-03:00",
+      "updated_by": 1
+    },
+    "123": {
+      "args": {
+        "customer_key": {},
+        "destiny_table": "customer",
+        "integ_type": "update",
+        "keys": [
+          "customer_id_legacy"
+        ]
+      },
+      "created_at": "2026-07-14T17:57:18.402736-03:00",
+      "created_by": 1,
+      "execution_fn": null,
+      "integration_id": 20,
+      "is_wiped": false,
+      "item_type": "load_data",
+      "name": "Carregamento",
+      "output_schema": {
+        "fields": {
+          "anotacoes_grupo": {
+            "field_destiny": "anotacoes_grupo",
+            "options": "overwrite",
+            "type": "text"
+          },
+          "cs_feeling": {
+            "field_destiny": "cs_feeling",
+            "options": "overwrite",
+            "type": "text"
+          },
+          "customer_cnpj": {
+            "field_destiny": "",
+            "options": "ignore",
+            "type": "text"
+          },
+          "customer_group": {
+            "field_destiny": "",
+            "options": "ignore",
+            "type": "text"
+          },
+          "customer_id": {
+            "field_destiny": "",
+            "options": "ignore",
+            "type": "text"
+          },
+          "customer_id_legacy": {
+            "field_destiny": "",
+            "options": "ignore",
+            "type": "text"
+          },
+          "customer_name": {
+            "field_destiny": "",
+            "options": "ignore",
+            "type": "text"
+          }
+        }
+      },
+      "position": {
+        "x": 775,
+        "y": 300
+      },
+      "updated_at": "2026-07-14T21:01:10.716973-03:00",
+      "updated_by": 1
+    }
+  },
+  "steps_dependency": [
+    {
+      "dependency_id": 122,
+      "direction": {
+        "from_direction": "right",
+        "to_direction": "left"
+      },
+      "item_id": 119
+    },
+    {
+      "dependency_id": 123,
+      "direction": {
+        "from_direction": "right",
+        "to_direction": "left"
+      },
+      "item_id": 122
+    },
+    {
+      "dependency_id": 120,
+      "direction": {
+        "from_direction": "right",
+        "to_direction": "left"
+      },
+      "item_id": 123
+    }
+  ]
+}

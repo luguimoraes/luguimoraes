@@ -1,0 +1,236 @@
+{
+  "connections": {
+    "6": {
+      "_deleted": false,
+      "connection_params": "REDACTED__preencher_no_ambiente_SenseData",
+      "created_at": "2025-10-02T21:12:06.294781",
+      "created_by": 1,
+      "default_connection": false,
+      "is_active": true,
+      "name": "SENSEDATA_HOM",
+      "source": "postgres",
+      "status": true,
+      "updated_at": null,
+      "updated_by": null
+    }
+  },
+  "integrations": {
+    "20": {
+      "_deleted": false,
+      "created_at": "2026-07-13T19:34:20.988590",
+      "created_by": 1,
+      "folder_id": null,
+      "name": "Grupos_Economicos",
+      "status": true,
+      "updated_at": "2026-07-14T21:16:17.825878",
+      "updated_by": 1
+    }
+  },
+  "steps": {
+    "119": {
+      "args": {},
+      "created_at": "2026-07-14T17:51:10.465575-03:00",
+      "created_by": 1,
+      "execution_fn": null,
+      "integration_id": 20,
+      "is_wiped": false,
+      "item_type": "start",
+      "name": "Início",
+      "output_schema": null,
+      "position": {
+        "x": 315,
+        "y": 315
+      },
+      "updated_at": "2026-07-14T17:51:10.465575-03:00",
+      "updated_by": null
+    },
+    "120": {
+      "args": {},
+      "created_at": "2026-07-14T17:51:10.465575-03:00",
+      "created_by": 1,
+      "execution_fn": null,
+      "integration_id": 20,
+      "is_wiped": false,
+      "item_type": "end",
+      "name": "Fim",
+      "output_schema": null,
+      "position": {
+        "x": 1128,
+        "y": 309
+      },
+      "updated_at": "2026-07-14T17:57:19.940705-03:00",
+      "updated_by": 1
+    },
+    "122": {
+      "args": {
+        "integration_params": {
+          "connection_id": 6,
+          "query": "LS0gPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tIDEwIC0gUVVFUlkgdjEgIHwgIENPUlJFQ0FPIE1JTklNQSAoZHJvcC1pbikKLS0gSW50ZWdyYWNhbzogR3J1cG9zX0Vjb25vbWljb3MgKGlkIDIwKSA+IHN0ZXAgMTIyIChkYXRhX3NvdXJjZSkKLS0gTWFudGVtIGV4YXRhbWVudGUgbyBtZXNtbyBtYXBlYW1lbnRvIGRlIGNhcmdhIGRvIHN0ZXAgMTIzLgotLSBTdWJzdGl0dWkgYSBxdWVyeSBhdHVhbCBzZW0gZXhpZ2lyIG5lbmh1bSBjYW1wbyBub3ZvIG5vIFNlbnNlRGF0YS4KLS0KLS0gTyBRVUUgTVVEQSBFTSBSRUxBQ0FPIEEgUVVFUlkgQVRVQUw6Ci0tICAgMS4gRmlsdHJvIGRlIGxvamFzIGF0aXZhcyAgICAgICAgICAgICAgICAgICAgICAgICAgKHBlZGlkbyBkZSAzMC8wNykKLS0gICAyLiBESVNUSU5DVCBPTiAtPiBlbGltaW5hIGR1cGxpY2FjYW8gcXVhbmRvIG8gZ3J1cG8gdGVtIDIgbWF0cml6ZXMKLS0gICAzLiBOb3JtYWxpemFjYW8gZG8gImdyb3VwIiAoYnRyaW0vdXBwZXIpIG5vIEpPSU4KLS0gICA0LiBNYXRyaXogaWRlbnRpZmljYWRhIHBvciBmbGFnIGV4cGxpY2l0YSwgY29tIGZhbGxiYWNrIHBhcmEgInNlbSBDTlBKIgotLSAgIDUuIEZpbHRybyBhbnRpLWNodXJuOiBzbyBkZXZvbHZlIGxpbmhhcyBxdWUgUkVBTE1FTlRFIG11ZGFyYW0KLS0gICA2LiBOYW8gcHJvcGFnYSBtYXRyaXogdmF6aWEgcG9yIGNpbWEgZGUgY29udGV1ZG8gcHJlZW5jaGlkbwotLQotLSA+Pj4gQVRFTkNBTzogYSBsaW5oYSBtYXJjYWRhIGNvbSBbQUpVU1RBUl0gZGVwZW5kZSBkbyByZXN1bHRhZG8gZGUKLS0gICAgIDAwX2Rlc2NvYmVydGFfbW9kZWxhZ2VtLnNxbC4gTmFvIHB1YmxpcXVlIHNlbSBjb25maXJtYXIuCi0tID09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQoKV0lUSCBtYXRyaXogQVMgKAogICAgU0VMRUNUIERJU1RJTkNUIE9OIChtLmNvbXBhbnksIHVwcGVyKGJ0cmltKG0uImdyb3VwIikpKQogICAgICAgICAgIG0uY29tcGFueSwKICAgICAgICAgICB1cHBlcihidHJpbShtLiJncm91cCIpKSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBBUyBncm91cF9rZXksCiAgICAgICAgICAgbS5pZCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgQVMgbWF0cml6X2lkLAogICAgICAgICAgIG0ubmFtZSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIEFTIG1hdHJpel9uYW1lLAogICAgICAgICAgIG0uY3VzdG9tX2ZpZWxkczo6anNvbmIgLT4gJ2NzX2ZlZWxpbmcnICAgICAgLT4+ICd2YWx1ZScgIEFTIGNzX2ZlZWxpbmdfbWF0cml6LAogICAgICAgICAgIG0uY3VzdG9tX2ZpZWxkczo6anNvbmIgLT4gJ2Fub3RhY29lc19ncnVwbycgLT4+ICd2YWx1ZScgIEFTIGFub3RhY29lc19tYXRyaXoKICAgIEZST00gcHVibGljLmN1c3RvbWVyIG0KICAgIFdIRVJFIG0uImdyb3VwIiBJUyBOT1QgTlVMTAogICAgICBBTkQgYnRyaW0obS4iZ3JvdXAiKSA8PiAnJwogICAgICAtLSBDb250YSBNYXRyaXo6IGZsYWcgZXhwbGljaXRhIGUgbyBjYW1pbmhvIGNvcnJldG87IGEgYXVzZW5jaWEgZGUKICAgICAgLS0gQ05QSiBmaWNhIGNvbW8gZmFsbGJhY2sgYXRlIGEgbWlncmFjYW8gZG8gY2FtcG8gdGlwb19jb250YS4KICAgICAgQU5EICgKICAgICAgICAgICAgbG93ZXIobS5jdXN0b21fZmllbGRzOjpqc29uYiAtPiAndGlwb19jb250YScgLT4+ICd2YWx1ZScpIElOICgnbWF0cml6JywgJ2NvbnRhIG1hdHJpeicpCiAgICAgICAgIE9SIE5VTExJRihidHJpbShtLmNucGopLCAnJykgSVMgTlVMTAogICAgICApCiAgICAgIC0tIE1hdHJpeiBlbSBicmFuY28gbmFvIGRldmUgYXBhZ2FyIG8gcXVlIGEgbG9qYSBqYSB0ZW0uCiAgICAgIEFORCAoCiAgICAgICAgICAgIE5VTExJRihidHJpbShDT0FMRVNDRShtLmN1c3RvbV9maWVsZHM6Ompzb25iIC0+ICdjc19mZWVsaW5nJyAgICAgIC0+PiAndmFsdWUnLCAnJykpLCAnJykgSVMgTk9UIE5VTEwKICAgICAgICAgT1IgTlVMTElGKGJ0cmltKENPQUxFU0NFKG0uY3VzdG9tX2ZpZWxkczo6anNvbmIgLT4gJ2Fub3RhY29lc19ncnVwbycgLT4+ICd2YWx1ZScsICcnKSksICcnKSBJUyBOT1QgTlVMTAogICAgICApCiAgICAtLSBEZXNlbXBhdGUgZGV0ZXJtaW5pc3RpY28gY2FzbyBleGlzdGEgbWFpcyBkZSB1bWEgbWF0cml6IG5vIGdydXBvOgogICAgLS0gdmVuY2UgYSBhdHVhbGl6YWRhIG1haXMgcmVjZW50ZW1lbnRlLiBTZSBhIGNvbHVuYSB1cGRhdGVkX2F0IG5hbwogICAgLS0gZXhpc3RpciwgdHJvcXVlIHBvciAgbS5pZCBERVNDICBhcGVuYXMuCiAgICBPUkRFUiBCWSBtLmNvbXBhbnksCiAgICAgICAgICAgICB1cHBlcihidHJpbShtLiJncm91cCIpKSwKICAgICAgICAgICAgIG0udXBkYXRlZF9hdCBERVNDIE5VTExTIExBU1QsCiAgICAgICAgICAgICBtLmlkIERFU0MKKQpTRUxFQ1QKICAgIGZpbGhvLmlkICAgICAgICAgICAgICAgICAgICBBUyBjdXN0b21lcl9pZCwKICAgIGZpbGhvLmlkX2xlZ2FjeSAgICAgICAgICAgICBBUyBjdXN0b21lcl9pZF9sZWdhY3ksCiAgICBmaWxoby5uYW1lICAgICAgICAgICAgICAgICAgQVMgY3VzdG9tZXJfbmFtZSwKICAgIGZpbGhvLmNucGogICAgICAgICAgICAgICAgICBBUyBjdXN0b21lcl9jbnBqLAogICAgZmlsaG8uImdyb3VwIiAgICAgICAgICAgICAgIEFTIGN1c3RvbWVyX2dyb3VwLAogICAgbWF0cml6LmNzX2ZlZWxpbmdfbWF0cml6ICAgIEFTIGNzX2ZlZWxpbmcsCiAgICBtYXRyaXouYW5vdGFjb2VzX21hdHJpeiAgICAgQVMgYW5vdGFjb2VzX2dydXBvCkZST00gcHVibGljLmN1c3RvbWVyIGZpbGhvCklOTkVSIEpPSU4gbWF0cml6CiAgICAgICAgT04gbWF0cml6LmNvbXBhbnkgICA9IGZpbGhvLmNvbXBhbnkKICAgICAgIEFORCBtYXRyaXouZ3JvdXBfa2V5ID0gdXBwZXIoYnRyaW0oZmlsaG8uImdyb3VwIikpCldIRVJFIE5VTExJRihidHJpbShmaWxoby5jbnBqKSwgJycpIElTIE5PVCBOVUxMICAgICAgICAgIC0tIGUgbG9qYSAodGVtIENOUEopCiAgQU5EIE5VTExJRihidHJpbShmaWxoby5pZF9sZWdhY3k6OnRleHQpLCAnJykgSVMgTk9UIE5VTEwgLS0gdGVtIGNoYXZlIGRlIGNhcmdhCiAgQU5EIGZpbGhvLnN0YXR1cyA9ICdhY3RpdmUnICAgICAgICAgICAgICAgICAgICAgICAgICAgIC0tIFtBSlVTVEFSXSBsb2phcyBhdGl2YXMKICAtLSBBbnRpLWNodXJuOiBzZW0gaXNzbywgdG9kYSBleGVjdWNhbyByZWVzY3JldmUgVE9EQVMgYXMgbG9qYXMgZG8KICAtLSBncnVwbywgcG9sdWluZG8gaGlzdG9yaWNvL3RpbWVsaW5lIGUgcG9kZW5kbyBkaXNwYXJhciByZWdyYXMgZGUKICAtLSBhbGVydGEgZGUgQ1MgRmVlbGluZyBzZW0gbmVuaHVtYSBtdWRhbmNhIHJlYWwgdGVyIGFjb250ZWNpZG8uCiAgQU5EICgKICAgICAgICBmaWxoby5jdXN0b21fZmllbGRzOjpqc29uYiAtPiAnY3NfZmVlbGluZycgICAgICAtPj4gJ3ZhbHVlJyBJUyBESVNUSU5DVCBGUk9NIG1hdHJpei5jc19mZWVsaW5nX21hdHJpegogICAgIE9SIGZpbGhvLmN1c3RvbV9maWVsZHM6Ompzb25iIC0+ICdhbm90YWNvZXNfZ3J1cG8nIC0+PiAndmFsdWUnIElTIERJU1RJTkNUIEZST00gbWF0cml6LmFub3RhY29lc19tYXRyaXoKICApOw==",
+          "source": "postgres"
+        },
+        "load_type": "total"
+      },
+      "created_at": "2026-07-14T17:51:24.224897-03:00",
+      "created_by": 1,
+      "execution_fn": null,
+      "integration_id": 20,
+      "is_wiped": false,
+      "item_type": "data_source",
+      "name": "PostgreSQL",
+      "output_schema": {
+        "fields": {
+          "customer_id": {
+            "remove_dots_and_dash": false,
+            "remove_special_char": false,
+            "remove_whitespaces": false,
+            "remove_zero_left": false,
+            "treatment": "keep_original",
+            "type": "text"
+          },
+          "customer_id_legacy": {
+            "remove_dots_and_dash": false,
+            "remove_special_char": false,
+            "remove_whitespaces": false,
+            "remove_zero_left": false,
+            "treatment": "keep_original",
+            "type": "text"
+          },
+          "customer_name": {
+            "remove_dots_and_dash": false,
+            "remove_special_char": false,
+            "remove_whitespaces": false,
+            "remove_zero_left": false,
+            "treatment": "keep_original",
+            "type": "text"
+          },
+          "customer_cnpj": {
+            "remove_dots_and_dash": false,
+            "remove_special_char": false,
+            "remove_whitespaces": false,
+            "remove_zero_left": false,
+            "treatment": "keep_original",
+            "type": "text"
+          },
+          "customer_group": {
+            "remove_dots_and_dash": false,
+            "remove_special_char": false,
+            "remove_whitespaces": false,
+            "remove_zero_left": false,
+            "treatment": "keep_original",
+            "type": "text"
+          },
+          "cs_feeling": {
+            "remove_dots_and_dash": false,
+            "remove_special_char": false,
+            "remove_whitespaces": false,
+            "remove_zero_left": false,
+            "treatment": "keep_original",
+            "type": "text"
+          },
+          "anotacoes_grupo": {
+            "remove_dots_and_dash": false,
+            "remove_special_char": false,
+            "remove_whitespaces": false,
+            "remove_zero_left": false,
+            "treatment": "keep_original",
+            "type": "text"
+          }
+        }
+      },
+      "position": {
+        "x": 424,
+        "y": 305
+      },
+      "updated_at": "2026-07-14T21:00:27.689529-03:00",
+      "updated_by": 1
+    },
+    "123": {
+      "args": {
+        "customer_key": {},
+        "destiny_table": "customer",
+        "integ_type": "update",
+        "keys": [
+          "customer_id_legacy"
+        ]
+      },
+      "created_at": "2026-07-14T17:57:18.402736-03:00",
+      "created_by": 1,
+      "execution_fn": null,
+      "integration_id": 20,
+      "is_wiped": false,
+      "item_type": "load_data",
+      "name": "Carregamento",
+      "output_schema": {
+        "fields": {
+          "customer_id": {
+            "field_destiny": "",
+            "options": "ignore",
+            "type": "text"
+          },
+          "customer_id_legacy": {
+            "field_destiny": "",
+            "options": "ignore",
+            "type": "text"
+          },
+          "customer_name": {
+            "field_destiny": "",
+            "options": "ignore",
+            "type": "text"
+          },
+          "customer_cnpj": {
+            "field_destiny": "",
+            "options": "ignore",
+            "type": "text"
+          },
+          "customer_group": {
+            "field_destiny": "",
+            "options": "ignore",
+            "type": "text"
+          },
+          "cs_feeling": {
+            "field_destiny": "cs_feeling",
+            "options": "overwrite",
+            "type": "text"
+          },
+          "anotacoes_grupo": {
+            "field_destiny": "anotacoes_grupo",
+            "options": "overwrite",
+            "type": "text"
+          }
+        }
+      },
+      "position": {
+        "x": 775,
+        "y": 300
+      },
+      "updated_at": "2026-07-14T21:01:10.716973-03:00",
+      "updated_by": 1
+    }
+  },
+  "steps_dependency": [
+    {
+      "dependency_id": 122,
+      "direction": {
+        "from_direction": "right",
+        "to_direction": "left"
+      },
+      "item_id": 119
+    },
+    {
+      "dependency_id": 123,
+      "direction": {
+        "from_direction": "right",
+        "to_direction": "left"
+      },
+      "item_id": 122
+    },
+    {
+      "dependency_id": 120,
+      "direction": {
+        "from_direction": "right",
+        "to_direction": "left"
+      },
+      "item_id": 123
+    }
+  ]
+}

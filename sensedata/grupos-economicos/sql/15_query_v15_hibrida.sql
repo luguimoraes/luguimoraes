@@ -81,8 +81,16 @@ base AS (
            -- dispararia em toda execucao -- tudo isso em silencio.
            COALESCE(f.custom_fields -> 'conta_matriz_nome'   ->> 'value',
                     f.custom_fields -> 'conta_matriz'        ->> 'value', '')   AS matriz_nome_atual,
-           COALESCE(f.custom_fields -> 'grupo_atualizado_em' ->> 'value',
-                    f.custom_fields -> 'grupo_atualizado'    ->> 'value', '')   AS atualizado_em_atual,
+           -- A chave real deste campo tem um UNDERSCORE NO FINAL. Confirmado
+           -- pelo cabecalho do task_123_carregamento.csv da execucao de
+           -- 13/08/2026: grupo_atualizado_em_ . Provavelmente sobrou um
+           -- espaco no fim do titulo na hora de criar o campo.
+           -- Sem esta grafia na leitura, o delta comparava sempre contra
+           -- vazio e a integracao reenviava todas as lojas em toda
+           -- execucao, sem erro nenhum aparecer.
+           COALESCE(f.custom_fields -> 'grupo_atualizado_em_' ->> 'value',
+                    f.custom_fields -> 'grupo_atualizado_em'  ->> 'value',
+                    f.custom_fields -> 'grupo_atualizado'     ->> 'value', '')  AS atualizado_em_atual,
            m.matriz_id,
            m.matriz_name,
            m.cs_feeling_matriz,

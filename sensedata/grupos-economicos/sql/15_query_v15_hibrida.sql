@@ -70,10 +70,19 @@ base AS (
            f.name                                                               AS customer_name,
            f.cnpj                                                               AS customer_cnpj,
            f."group"                                                            AS customer_group,
-           COALESCE(f.custom_fields -> 'cs_feeling'          ->> 'value', '')   AS cs_feeling_atual,
-           COALESCE(f.custom_fields -> 'anotacoes_grupo'     ->> 'value', '')   AS anotacoes_atual,
-           COALESCE(f.custom_fields -> 'conta_matriz_nome'   ->> 'value', '')   AS matriz_nome_atual,
-           COALESCE(f.custom_fields -> 'grupo_atualizado_em' ->> 'value', '')   AS atualizado_em_atual,
+           COALESCE(f.custom_fields -> 'cs_feeling'      ->> 'value', '')       AS cs_feeling_atual,
+           COALESCE(f.custom_fields -> 'anotacoes_grupo' ->> 'value', '')       AS anotacoes_atual,
+           -- A ESCRITA usa o label do campo; a LEITURA usa a chave interna,
+           -- que o SenseData deriva do label na criacao. O campo foi criado
+           -- como "Conta Matriz", entao a chave pode ser conta_matriz em vez
+           -- de conta_matriz_nome. Aceitamos as duas grafias para nao depender
+           -- disso: se a chave errada fosse lida, escrito_por_nos ficaria
+           -- sempre falso, a limpeza nunca aconteceria e o filtro de delta
+           -- dispararia em toda execucao -- tudo isso em silencio.
+           COALESCE(f.custom_fields -> 'conta_matriz_nome'   ->> 'value',
+                    f.custom_fields -> 'conta_matriz'        ->> 'value', '')   AS matriz_nome_atual,
+           COALESCE(f.custom_fields -> 'grupo_atualizado_em' ->> 'value',
+                    f.custom_fields -> 'grupo_atualizado'    ->> 'value', '')   AS atualizado_em_atual,
            m.matriz_id,
            m.matriz_name,
            m.cs_feeling_matriz,

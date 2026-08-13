@@ -117,7 +117,16 @@ alvo AS (
            -- o conteudo atual da loja veio desta integracao.
            (NULLIF(btrim(b.matriz_nome_atual), '') IS NOT NULL)               AS escrito_por_nos,
 
-           CASE WHEN b.elegivel THEN b.cs_feeling_matriz ELSE '' END          AS cs_feeling_novo,
+           -- cs_feeling e um campo SELECT no SenseData (5 opcoes fixas),
+           -- nao texto livre. Escrever '' nele durante a limpeza mandaria
+           -- um valor que nao existe na lista de opcoes, e a carga pode
+           -- recusar. Entao a limpeza NAO zera o CS Feeling: mantem o
+           -- ultimo valor e devolve o proprio valor atual, o que faz este
+           -- campo nunca disparar o filtro de delta sozinho.
+           -- Quem sinaliza que a loja saiu da gestao da matriz sao os
+           -- campos de rastreio, que sao texto e podem ser zerados.
+           CASE WHEN b.elegivel THEN b.cs_feeling_matriz
+                ELSE b.cs_feeling_atual END                                   AS cs_feeling_novo,
            CASE WHEN b.elegivel THEN b.anotacoes_matriz  ELSE '' END          AS anotacoes_novo,
            CASE WHEN b.elegivel THEN b.matriz_name       ELSE '' END          AS matriz_nome_novo,
 

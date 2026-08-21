@@ -3,6 +3,14 @@
 Documento de trabalho da auditoria. Números vindos do export SenseData de 13/08/2026
 (recorte Origem = "Integração Sistema": 2.048 contas, 16.945 linhas).
 
+> **Estado em 21/08/2026 — este documento é o registro histórico da primeira apuração.**
+> As dúvidas listadas em "Benchmarking — o que ainda não sabemos" e em "O que precisa ser
+> levantado" já foram respondidas. Vale a **hipótese 1**: Benchmarking é campo do próprio
+> contato (`custom_fields`, array jsonb), e os valores estão vivos nos registros desativados.
+> A causa raiz está comprovada: a chave gravada em `id_legacy` muda de formato entre execuções.
+> Documentos atuais: `card-sprint-contatos.md` (diagnóstico e CRs),
+> `runbook-backup-contatos.md` (operação) e `queries-contatos-tr.sql` (apuração).
+
 ## O ponto que a Jaqueline levantou
 
 O que ela confirma como correto: inativar contatos que não constam no relatório.

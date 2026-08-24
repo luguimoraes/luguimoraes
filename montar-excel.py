@@ -18,17 +18,24 @@ As duas abas tem papeis diferentes e nao sao o mesmo recorte de colunas:
                          E a aba de conferencia: quem ficou inativo e por que.
                          O 'Ativo' aqui e o estado ATUAL, ou seja, False.
 
-    Manutencao CSV       duas colunas: 'ID Contato' e 'Ativo' = Sim. E o que
-                         sobe. A manutencao casa por ID e grava so as colunas
-                         presentes no arquivo, entao duas colunas nao tem como
-                         apagar Cargo, Telefone ou Benchmarking de ninguem.
+    Manutencao CSV       tres colunas: 'Cliente (ID Original)', 'E-mail' e
+                         'Ativo' = Sim. E o que sobe. Sao os obrigatorios da
+                         manutencao mais o que muda; como ela grava so as
+                         colunas presentes, tres nao tem como apagar Cargo,
+                         Telefone ou Benchmarking de ninguem.
 
 O arquivo que sobe sai da SELECAO, nao do export: se o export vier incompleto,
 a aba de conferencia sai furada mas a reativacao continua inteira.
 
-Os dois arquivos precisam da coluna 'ID Contato'. Sem ela nao da para separar
-dois contatos que dividem o mesmo e-mail na mesma conta — que e justamente o
-caso do alvo.
+CUIDADO: a manutencao identifica por (Cliente, E-mail), nao pelo ID do
+contato. Duas linhas com o mesmo e-mail na mesma conta — a forma do alvo —
+ela nao separa. O e-mail sai com a caixa exata do registro escolhido; se ela
+casar ignorando maiuscula/minuscula, ativa o par inteiro. Suba uma conta
+primeiro.
+
+Os dois arquivos precisam da coluna 'ID Contato' — nao para a manutencao, que
+nao a usa, mas para o script casar export e selecao na aba de conferencia sem
+confundir os dois registros do par.
 
 O cabecalho do export sai byte a byte como entrou. 'Brand ' e 'Produto ' tem
 espaco no fim de verdade; se o script aparar, a manutencao nao reconhece.
@@ -49,8 +56,12 @@ ABA_INATIVOS = "Inativos (de-para)"
 ABA_MANUTENCAO = "Manutencao CSV"
 
 COL_ID = "ID Contato"
-COL_ATIVO = "Ativo"
+COL_CONTA = "ID Original"
+COL_EMAIL = "Email"
 COL_ENTRA = "_Entra no arquivo"
+
+# cabecalho do arquivo que sobe: os obrigatorios da manutencao + o que muda
+CAB_MANUTENCAO = ["Cliente (ID Original)", "E-mail", "Ativo"]
 VALOR_ATIVO = "Sim"
 VERDADEIRO = {"t", "true", "sim", "s", "yes", "y", "1"}
 
@@ -124,6 +135,8 @@ def main(argv):
 
     i_id_exp = indice(cab_export, COL_ID, "export")
     i_id_sel = indice(cab_selecao, COL_ID, "selecao")
+    i_conta = indice(cab_selecao, COL_CONTA, "selecao")
+    i_email = indice(cab_selecao, COL_EMAIL, "selecao")
     i_entra = indice(cab_selecao, COL_ENTRA, "selecao")
     i_controle = [i for i, c in enumerate(cab_selecao) if c.strip().startswith("_")]
     controle = [cab_selecao[i].strip() for i in i_controle]
@@ -134,11 +147,21 @@ def main(argv):
 
     # O que sobe sai da selecao, nao do export: um export incompleto fura a aba
     # de conferencia, mas nao pode encolher a reativacao.
-    # ordenado por ID para bater linha a linha com a saida de reativar-csv.sql
-    lin_manutencao = sorted(([chave, VALOR_ATIVO]
-                             for chave, l in veredito.items()
+    lin_manutencao = sorted(([campo(l, i_conta), campo(l, i_email), VALOR_ATIVO]
+                             for l in lin_selecao
                              if campo(l, i_entra).lower() in VERDADEIRO),
-                            key=lambda l: (len(l[0]), l[0]))
+                            key=lambda l: (l[0], l[1].lower()))
+
+    # A manutencao casa por (Cliente, E-mail) e nao enxerga caixa nem ID. Duas
+    # linhas com a mesma dupla mandariam ordens ambiguas para o mesmo par.
+    pares = {(l[0], l[1].lower()) for l in lin_manutencao}
+    if len(pares) != len(lin_manutencao):
+        raise SystemExit(
+            f"selecao: {len(lin_manutencao) - len(pares)} linhas repetem "
+            f"(Cliente, E-mail) no arquivo que sobe.\n"
+            "A manutencao nao separa duas linhas da mesma dupla — a selecao\n"
+            "tem que escolher UM registro por pessoa-conta antes de chegar aqui."
+        )
 
     cab_inativos = cab_export + controle
     lin_inativos = []
@@ -149,18 +172,18 @@ def main(argv):
 
     wb = Workbook()
     montar_aba(wb.active, ABA_INATIVOS, cab_inativos, lin_inativos)
-    montar_aba(wb.create_sheet(), ABA_MANUTENCAO, [COL_ID, COL_ATIVO], lin_manutencao)
+    montar_aba(wb.create_sheet(), ABA_MANUTENCAO, CAB_MANUTENCAO, lin_manutencao)
     wb.save(saida)
 
     csv_manutencao = saida.with_name("manutencao.csv")
     with open(csv_manutencao, "w", encoding="utf-8-sig", newline="") as f:
         escritor = csv.writer(f)
-        escritor.writerow([COL_ID, COL_ATIVO])
+        escritor.writerow(CAB_MANUTENCAO)
         escritor.writerows(lin_manutencao)
 
     print(f"{saida}")
     print(f"  {ABA_INATIVOS:<22} {len(lin_inativos):>6} linhas · {len(cab_inativos)} colunas")
-    print(f"  {ABA_MANUTENCAO:<22} {len(lin_manutencao):>6} linhas · 2 colunas")
+    print(f"  {ABA_MANUTENCAO:<22} {len(lin_manutencao):>6} linhas · {len(CAB_MANUTENCAO)} colunas")
     print(f"{csv_manutencao}  <- e este que sobe")
 
     faltando = len(veredito) - len(lin_inativos)

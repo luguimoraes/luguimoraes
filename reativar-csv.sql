@@ -1,16 +1,22 @@
 -- Contatos TR — o arquivo da manutenção. Exporte e suba.
 --
--- A manutenção casa por ID do contato e grava só as colunas que estão no
--- arquivo. Então o arquivo tem duas: a chave e o que muda. O que não está
--- aqui ela não toca — não há como apagar Cargo, Telefone ou Benchmarking de
--- ninguém, que era o risco de subir as 41 colunas.
+-- Obrigatórios da manutenção: Cliente (ID Original ou ID Sensedata) e
+-- Telefone 1/Telefone 2 e/ou E-mail. Ela grava só as colunas presentes no
+-- arquivo, então o arquivo tem três: as duas que identificam e a que muda.
+-- O que não está aqui ela não toca — não há como apagar Cargo, Telefone ou
+-- Benchmarking de ninguém, que era o risco de subir as 41 colunas.
 --
--- Como a chave é o ID, cada linha atinge um contato só. A pessoa com dois
--- registros de mesmo e-mail na mesma conta deixou de ser risco: o `rn = 1`
--- escolhe qual dos dois fica ativo e o ID diz exatamente qual é.
+-- ##########################################################################
+-- A chave NÃO é o ID do contato, e por isso ela não separa duas linhas com
+-- o mesmo e-mail na mesma conta — que é a forma do alvo. Uma linha daqui
+-- pode acabar ativando os DOIS registros do par, e a pessoa termina com 2
+-- ativos em vez de 1.
 --
--- Se a tela não reconhecer o cabeçalho "ID Contato", troque pelo nome exato
--- que ela lista como obrigatório — "ID Contato (Sensedata)".
+-- O e-mail sai com a caixa exata do registro escolhido pelo `rn = 1`. Se a
+-- manutenção casar respeitando maiúscula/minúscula, ela acerta só o certo.
+-- Se casar ignorando a caixa, pega os dois. Não dá para saber sem testar:
+-- SUBA UMA CONTA PRIMEIRO e rode a conferência do rodapé.
+-- ##########################################################################
 
 WITH b AS (
   SELECT id, id_customer, btrim(email) AS email, is_active, created_at,
@@ -34,25 +40,28 @@ g AS (
                                      created_at DESC) AS rn            -- o mais recente
   FROM b WINDOW par AS (PARTITION BY lower(email), id_customer)
 )
-SELECT g.id  AS "ID Contato",
-       'Sim' AS "Ativo"
-FROM g
+SELECT c.id_legacy AS "Cliente (ID Original)",
+       g.email     AS "E-mail",
+       'Sim'       AS "Ativo"
+FROM g JOIN public.customer c ON c.id = g.id_customer
 WHERE g.veio AND NOT g.tem_ativo AND g.rn = 1
-  -- As quatro linhas abaixo tiram os ~47 e-mails quebrados. Elas existiam
-  -- porque a manutenção casaria por e-mail, e e-mail torto não casa com nada.
-  -- Com a chave sendo o ID isso deixou de valer: dá para reativar a pessoa
-  -- agora e corrigir o e-mail depois, na tela. Apague as quatro para trazê-los
-  -- de volta — aí o total sobe acima de 7.351 e precisa ser reconferido.
+  -- Os ~47 e-mails quebrados ficam de fora: a chave é o próprio e-mail, e um
+  -- e-mail torto não casa com registro nenhum. Esses são correção manual na
+  -- tela do SenseData, não têm como entrar em arquivo.
   AND g.email ~ '^[^@[:space:],;<>]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
   AND g.email !~ '\.\.'
   AND g.email !~* '\.(con|ne|cm|bra)$'
   AND g.id NOT IN (209338, 210078, 211563, 218790)  -- .co que era .com
-ORDER BY 1;
+ORDER BY 1, 2;
 
--- Piloto de uma conta só, antes de soltar os 7 mil: acrescente ao WHERE
---   AND g.id_customer = (SELECT id FROM public.customer WHERE id_legacy = '132626-TAX')
+-- Piloto — suba UMA conta antes dos 7 mil. Escolha uma que tenha par:
+--   acrescente ao WHERE   AND c.id_legacy = '125609-GTM'
 --
--- Conferência depois de subir — cada pessoa-conta tem que ter 1 ativo, não 2:
+-- Conferência depois do piloto. Tem que dar 1 em todas as linhas; se aparecer
+-- 2, a manutenção ignorou a caixa e ativou o par inteiro — pare aí.
 --   troque o SELECT final por
---   SELECT count(*) FILTER (WHERE is_active) AS ativos_no_par, count(*)
---   FROM g WHERE g.veio GROUP BY lower(email), id_customer ORDER BY 1;
+--   SELECT c.id_legacy, lower(g.email) AS pessoa,
+--          count(*) FILTER (WHERE g.is_active) AS ativos_agora, count(*) AS no_par
+--   FROM g JOIN public.customer c ON c.id = g.id_customer
+--   WHERE g.veio AND c.id_legacy = '125609-GTM'
+--   GROUP BY 1, 2 ORDER BY 3 DESC;

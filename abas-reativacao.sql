@@ -9,9 +9,14 @@
 --     export.csv    export de contatos do SenseData, com as 41 colunas
 --     selecao.csv   a saída desta query
 --
--- Sai o xlsx de duas abas e o manutencao.csv de duas colunas, que é o que
+-- Sai o xlsx de duas abas e o manutencao.csv de três colunas, que é o que
 -- sobe. Para só reativar, sem a conferência, o `reativar-csv.sql` dá o mesmo
 -- arquivo direto do banco, sem passar pelo script.
+--
+-- `_Registros no par` é a coluna a olhar antes de subir: onde ela for maior
+-- que 1, a dupla (Cliente, E-mail) da manutenção não separa os registros, e
+-- uma linha do arquivo pode ativar os dois. Veja o cabeçalho do
+-- `reativar-csv.sql`.
 
 WITH b AS (
   SELECT id, id_customer, btrim(email) AS email, is_active, created_at,

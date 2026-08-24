@@ -162,8 +162,9 @@ FROM escolhido e
 JOIN public.customer cli ON cli.id = e.id_customer
 ORDER BY cli.id_legacy, e.nome, e.produto;
 
--- Exporte o resultado. Para a manutenção, mantenha apenas as duas primeiras
--- colunas ("ID Contato" e "Ativo") — as demais são para conferência.
+-- Esta versão é a de conferência — as colunas extras existem para você olhar
+-- antes de subir. Para gerar o CSV da manutenção direto, sem editar colunas
+-- depois, rode `reativar-csv.sql`: mesma seleção, só "ID Contato" e "Ativo".
 -- CONFIRME o cabeçalho que a manutenção do SenseData espera antes de subir.
 
 

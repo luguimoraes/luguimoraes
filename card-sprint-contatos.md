@@ -100,6 +100,27 @@ Os 120 contatos-destino apurados em 20/08 **não aparecem** no recorte de 21/08 
 nesta onda, então a recuperação direta segue viável. Já os 412 registros inativos que carregavam
 Benchmarking foram todos re-carimbados hoje, e outros 40 se somaram a eles (412 → 452).
 
+## 2.2 — Os contatos ESTAVAM no arquivo do S3
+
+Teste sobre o export de 24/08: dos 10.495 registros antigos hoje inativos, quantos reaparecem como
+**registro novo** para a mesma pessoa na mesma conta?
+
+| | Registros | % |
+|---|---|---|
+| Reaparecem como registro novo (pessoa + conta) | 10.353 | **98,6%** |
+| Idem, com o mesmo produto | 10.325 | 98,4% |
+| Sem correspondente novo | 142 | 1,4% |
+
+Se o contato reaparece como registro novo, ele **estava no arquivo** — a carga leu, não encontrou o
+registro existente e inseriu outro. A inativação não foi por ausência no S3: foi falha de match.
+
+Isso separa as duas coisas que estavam misturadas na conversa com o cliente:
+
+- **142 registros (1,4%)** não têm correspondente novo. Esses provavelmente não vieram no arquivo, e
+  para eles a inativação é o comportamento correto e acordado.
+- **10.353 registros (98,6%)** vieram no arquivo e foram desativados mesmo assim. Não há regra de
+  negócio que justifique isso — é o defeito.
+
 ## 3. Causa raiz — confirmada
 
 A chave de upsert é gravada em `customer_contact.id_legacy`. Na carga seguinte a string é remontada

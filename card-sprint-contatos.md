@@ -14,7 +14,11 @@ A cada execução da carga de contatos, os registros existentes não são reconh
 que toda a base de origem `Integração Sistema` é desativada e recriada, gerando uma nova geração
 de duplicados e abandonando os campos preenchidos manualmente.
 
-**Não é um incidente pontual.** Já são quatro ondas: 13/08, 14/08, 20/08 e **21/08**.
+**Não é um incidente pontual.** Já são cinco ondas: 13/08, 14/08, 20/08, 21/08 e **24/08**.
+
+> **A carga não está pausada.** A onda de 24/08 rodou às 13h13, depois do card ter sido
+> aberto com CR-0 (pausar) como ação imediata. Enquanto a carga roda, o estrago cresce e a
+> janela de recuperação encolhe.
 
 Distribuição em 9.562 pessoas-conta distintas (origem `Integração Sistema`, apuração de 20/08):
 
@@ -79,12 +83,27 @@ cada um deixado por uma execução diferente.
 
 | Formato gravado em `id_legacy` | Registros | Geração | Exemplo |
 |---|---|---|---|
-| Numérico | 7.079 | julho/2025 | `13779`, `28513` |
-| `email : cnpj : produto` | 17 | 13–14/08/2026 | `nome@empresa.com:00.000.000/0001-00:ONESOURCE DFe` |
-| Código da conta | 4 | 20/08/2026 | `135226-TAX` |
+| Numérico | 7.079 | jul/2025 **a 31/07/2026** | `13779`, `28513`, `35024` |
+| `email : cnpj` | — | 13/08/2026 22:45 | `nome@empresa.com:00.000.000/0001-00` |
+| `email : cnpj : produto` | 17 | 14/08/2026 14:09 | `nome@empresa.com:00.000.000/0001-00:ONESOURCE DFe` |
+| **Código da conta** | 4 | 20/08/2026 22:49 | `132626-TAX` |
 
 Os valores numéricos são 7.079 inteiros distintos entre 155 e 34.840, sem correlação com o
 `id_contato` (r = 0,07) — não é identificador do SenseData, é a chave da carga original.
+A conferência de 24/08 mostrou que esse formato **seguiu em uso até 31/07/2026** (chaves 34.9xx
+e 35.0xx), e não só na carga de 2025 — a numeração é contínua e simplesmente para em 13/08.
+
+### 3.2 — Por que a carga de 20/08 trouxe ~1 contato por conta
+
+A chave gravada em 20/08 é **o código da conta**, não o contato: `132626-TAX`. Não há nada no valor
+que distinga uma pessoa da outra dentro da mesma conta.
+
+Consequência direta: **só um contato por conta sobrevive ao upsert.** Cada linha seguinte do arquivo
+recalcula a mesma chave e sobrescreve o mesmo registro. Isso explica com mecanismo — e não por
+correlação — o número que já estava na tabela de volumes: 2.102 registros para 2.053 contas (~1,0).
+
+Em uma conta conferida registro a registro, os 7 contatos corretos (4 pessoas × produto) foram
+recriados certos em 14/08 e colapsaram para **1 único ativo** depois de 20/08.
 
 Isso responde ao ponto que estava em aberto no card anterior: a recriação continuou em 14/08, 20/08
 e 21/08 **sem nova alteração de configuração** porque a chave calculada muda entre execuções.
@@ -115,23 +134,28 @@ Dois fatores se somam:
 2. **Inativação em massa.** O `Pré-processing` desativa 100% da base antes de cada carga e depende
    do fluxo principal para reativar. Match falhou = nada é reativado.
 
-## 3.1 — Único ponto ainda em aberto
+## 3.1 — Cada onda pega um recorte diferente
 
-O recorte de 21/08 tem 7.100 linhas, contra ~35 mil contatos na base. Falta confirmar se o
-pré-processing leu a base inteira (e o export é que foi filtrado) ou se leu apenas um subconjunto.
-Query 2.2 do `queries-contatos-tr.sql` resolve. Se for subconjunto, o filtro do step 2132 também
-precisa ser revisto.
+O recorte de 21/08 (7.100 linhas) **não é a base inteira**: nenhuma chave numérica acima de 34.840
+aparece nele, e apenas 3 registros criados em jul/2026. A conferência de 24/08 encontrou registros
+de 29 e 31/07/2026 que não foram tocados em 21/08 — e foram tocados hoje.
 
-Não muda a conclusão nem as ações abaixo.
+Ou seja, a onda de 24/08 alcançou **mais** registros que a de 21/08. O conjunto varia entre
+execuções, o que é mais um sintoma do arquivo de origem instável (Parte B do runbook) e não muda
+nenhuma das ações abaixo.
 
 ---
 
 ## 4. Ação imediata
 
-### CR-0 — Pausar a carga de contatos
+### CR-0 — Pausar a carga de contatos · **NÃO EXECUTADO**
 
 Cada execução desativa mais registros, cria mais duplicados e reduz o que ainda pode ser
 recuperado (280 → 120 em uma semana). Pausar até a correção.
+
+**Status em 24/08: a carga rodou de novo às 13h13.** Pausar `Pré-processing_Inativa_Contatos`
+(2012) e `Contatos_S3_V4` (2036) é pré-requisito de todo o resto — inclusive de qualquer
+conferência, porque a base muda debaixo da consulta.
 
 ### BLOQUEIO — expurgo de inativos
 

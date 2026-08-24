@@ -79,6 +79,22 @@ só podem ser desativados, nunca reativados. Por isso reaparecem em toda onda.
 Isso desloca o eixo do problema: não basta restaurar backup ou corrigir o arquivo do S3. Sem
 reescrever as chaves órfãs (CR-1b no card), a recriação continua.
 
+### A.5 — A quinta onda: 24/08 13h13 (a carga não foi pausada)
+
+Conferência direta no banco em 24/08 mostrou `updated_at = 2026-08-24 13:13:09` em registros de
+`Integração Sistema`, com a reativação do sobrevivente às 13h15. **A rotina continua rodando.**
+
+Duas coisas a mais que essa conferência mostrou:
+
+1. **A chave de 20/08 é o código da conta** (`132626-TAX`), não o contato. Como todas as linhas da
+   mesma conta calculam a mesma chave, cada uma sobrescreve a anterior e **só um contato por conta
+   sobrevive**. É o mecanismo por trás do ~1,0 contato por conta da tabela em A.3.
+2. **A chave numérica não é só da carga de 2025.** Há registros criados em 29 e 31/07/2026 com
+   chave numérica (34.9xx, 35.0xx). A numeração é contínua até 31/07/2026 e para em 13/08.
+
+> Enquanto a carga não for pausada, qualquer conferência mede uma base que muda debaixo da consulta,
+> e qualquer recuperação é desfeita na execução seguinte. Pausar é pré-requisito de tudo.
+
 ---
 
 ## Parte B — Verificar o arquivo no S3 (30 min, confirma ou derruba a causa secundária)
@@ -101,7 +117,7 @@ a integração não distingue arquivo novo de arquivo antigo.
 2. **Comparar `LastModified` com os horários de execução da carga:**
 
    ```
-   13/08 22:43   ·   14/08   ·   20/08 22:00   ·   21/08 18:12
+   13/08 22:43   ·   14/08 14:09   ·   20/08 22:49   ·   21/08 18:12   ·   24/08 13:13
    ```
 
 3. **Contar linhas de cada versão:**
@@ -131,7 +147,7 @@ a integração não distingue arquivo novo de arquivo antigo.
 ## Parte C — Restaurar o backup (ordem obrigatória)
 
 > **A ordem importa.** Restaurar sem pausar significa que a próxima carga desfaz tudo.
-> A recriação rodou em 13/08, 14/08, 20/08 e 21/08 — não é evento único.
+> A recriação rodou em 13/08, 14/08, 20/08, 21/08 e 24/08 — não é evento único, e segue ativa.
 
 ### C.1 — Antes de restaurar
 

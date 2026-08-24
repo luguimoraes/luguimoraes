@@ -32,12 +32,31 @@ Distribuição em 9.562 pessoas-conta distintas (origem `Integração Sistema`, 
 
 ## 2. Impacto medido
 
-| | 13/08 | 20/08 | 21/08 |
-|---|---|---|---|
-| Contatos na base | 22.783 | 35.539 | — |
-| Ativos `Integração Sistema` | 6.257 | 2.053 | ver §2.1 |
-| Benchmarking ativos | 3 | 3 | 4 |
-| Benchmarking em registros inativos | 437 | 448 | 448 |
+| | 13/08 | 20/08 | 21/08 | 24/08 |
+|---|---|---|---|---|
+| Contatos na base | 22.783 | 35.539 | — | 35.543 |
+| Ativos `Integração Sistema` | 6.257 | 2.053 | ver §2.1 | 2.052 |
+| Benchmarking ativos | 3 | 3 | 4 | 7 |
+| Benchmarking em registros inativos | 437 | 448 | 448 | 448 |
+
+### 2.0 — O número que mede o estrago
+
+Reconstrução do estado de 10/08 sobre o export completo de 24/08 (35.543 registros):
+
+| | Registros | Pessoas-conta |
+|---|---|---|
+| Ativos em 10/08 (`Integração Sistema`) | 10.495 | 8.893 |
+| Desses, ainda ativos hoje | **0** | — |
+| Sem nenhum contato ativo hoje | — | **6.950** (78%) |
+
+**Nenhum registro foi apagado** — nenhuma pessoa-conta desapareceu da base. A recuperação é
+integralmente possível.
+
+Os 2.052 ativos de hoje são todos registros **novos**: 2.051 criados em 20/08 e 1 em 22/08.
+Nenhum contato que o cliente via em 10/08 sobreviveu.
+
+Contatos `Zendesk` (5.576), `GSI_GTM` (164) e `GSI_LEGAL` (81) têm **zero** inativos — o
+`Filtro_Type` os protege, e é por isso que só 11 das 2.124 contas ficaram sem nenhum contato ativo.
 
 A base ativa caiu para um terço em uma semana. A tela 360 mostra hoje uma fração dos contatos.
 
@@ -226,6 +245,17 @@ Situação em 21/08: **452 registros com marcação real**, em 416 pessoas-conta
 Distribuição por produto de referência (top): Onesource Tax One 141 · Legal One 70 ·
 Onesource Global Trade 60 · Onesource DFe 50 · Onesource Tax Analyser 14. Por brand:
 TAX 248 · GTM 126 · LEGAL 78.
+
+### 6.1 — Por que "restabelecer nos contatos ativos" não funciona como pedido
+
+Das 419 pessoas-conta com marcação, apenas **138 têm contato ativo hoje** para receber o dado.
+As outras **281 (67%) não têm destino algum** — não existe contato ativo daquela pessoa naquela conta.
+
+Migrar campo entre registros só resolve 1/3 do problema. **A reativação resolve os 100%**, porque
+431 das 455 marcações estão nos próprios registros que estavam ativos em 10/08: reativar traz o
+Benchmarking junto, sem carga de migração de campo.
+
+Ordem correta: reativar primeiro, migrar campo depois (e só nos poucos casos que sobrarem).
 
 Sobre o mapeamento de 20/08 (412 pessoas-conta):
 

@@ -255,16 +255,28 @@ Distribuição por produto de referência (top): Onesource Tax One 141 · Legal 
 Onesource Global Trade 60 · Onesource DFe 50 · Onesource Tax Analyser 14. Por brand:
 TAX 248 · GTM 126 · LEGAL 78.
 
-### 6.1 — Por que "restabelecer nos contatos ativos" não funciona como pedido
+### 6.1 — São duas populações diferentes, e isso define a ordem do trabalho
 
-Das 419 pessoas-conta com marcação, apenas **138 têm contato ativo hoje** para receber o dado.
-As outras **281 (67%) não têm destino algum** — não existe contato ativo daquela pessoa naquela conta.
+O cruzamento com o snapshot de 13/08 separa dois grupos que não se sobrepõem:
 
-Migrar campo entre registros só resolve 1/3 do problema. **A reativação resolve os 100%**, porque
-431 das 455 marcações estão nos próprios registros que estavam ativos em 10/08: reativar traz o
-Benchmarking junto, sem carga de migração de campo.
+| População | Registros | Benchmarking | O que resolve |
+|---|---|---|---|
+| Ativos em 13/08, inativos hoje | 6.203 | **0** | Reativação |
+| Já inativos em 13/08, com marcação | 431 | 431 | **Não resolve com reativação** |
 
-Ordem correta: reativar primeiro, migrar campo depois (e só nos poucos casos que sobrarem).
+**Reativar os 6.203 não devolve nenhuma marcação de Benchmarking.** Os dois problemas são
+independentes e precisam de tratamentos separados.
+
+Das 419 pessoas-conta com marcação, apenas **138 têm contato ativo hoje** para receber o dado;
+as outras **281 (67%)** não têm destino algum. Ou seja, "restabelecer nos contatos ativos" como
+pedido pelo cliente cobre no máximo um terço dos casos.
+
+**O que falta para fechar:** saber se os 431 registros com marcação estavam ativos em 10/08. Se
+estavam, foram derrubados pela primeira onda e a reativação deles é legítima. Se já estavam
+inativos antes, são clones antigos e o caminho é migração de campo. O snapshot de 13/08 é
+**posterior** à primeira onda (22h43) e não distingue os dois casos — só a listagem do dia 10
+responde. 379 das 455 marcações estão em registros criados em julho/2025, o que favorece a
+primeira hipótese, mas não prova.
 
 Sobre o mapeamento de 20/08 (412 pessoas-conta):
 

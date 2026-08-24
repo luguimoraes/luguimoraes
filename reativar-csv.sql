@@ -67,6 +67,7 @@ JOIN public.customer c ON c.id = g.id_customer
 JOIN todos t ON t.id_customer = g.id_customer AND t.chave = lower(g.email)
 WHERE g.veio AND NOT t.tem_ativo AND g.rn = 1
   AND t.n = 1     -- LOTE A: sobe agora.  Lote B: troque por  t.n > 1
+                  -- TUDO de uma vez: apague esta linha.
   -- Os ~47 e-mails quebrados ficam de fora: a chave é o próprio e-mail, e um
   -- e-mail torto não casa com registro nenhum. Esses são correção manual na
   -- tela do SenseData, não têm como entrar em arquivo.

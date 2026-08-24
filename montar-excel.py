@@ -7,20 +7,31 @@ Uso:
     export.csv    export de contatos do SenseData, com as 41 colunas
     selecao.csv   saida de abas-reativacao.sql: chave + veredito
 
-As 41 colunas nao sao reconstruidas no SQL — elas ja vem preenchidas no
-export. O banco so diz quais linhas entram e o script vira o Ativo. Saem:
+Saem:
 
     contatos-reativacao.xlsx   aba "Inativos (de-para)" e aba "Manutencao CSV"
     manutencao.csv             o arquivo que realmente sobe
 
-O cruzamento e por 'ID Contato' quando as duas pontas tem a coluna; se nao,
-cai para (ID Original, Email), sem caixa e sem espaco nas bordas — e essa
-volta so vale se nenhuma conta tiver o mesmo e-mail em dois contatos, senao
-nao ha como saber qual dos dois e a linha.
+As duas abas tem papeis diferentes e nao sao o mesmo recorte de colunas:
+
+    Inativos (de-para)   as 41 colunas do export + as de controle da selecao.
+                         E a aba de conferencia: quem ficou inativo e por que.
+                         O 'Ativo' aqui e o estado ATUAL, ou seja, False.
+
+    Manutencao CSV       duas colunas: 'ID Contato' e 'Ativo' = Sim. E o que
+                         sobe. A manutencao casa por ID e grava so as colunas
+                         presentes no arquivo, entao duas colunas nao tem como
+                         apagar Cargo, Telefone ou Benchmarking de ninguem.
+
+O arquivo que sobe sai da SELECAO, nao do export: se o export vier incompleto,
+a aba de conferencia sai furada mas a reativacao continua inteira.
+
+Os dois arquivos precisam da coluna 'ID Contato'. Sem ela nao da para separar
+dois contatos que dividem o mesmo e-mail na mesma conta — que e justamente o
+caso do alvo.
 
 O cabecalho do export sai byte a byte como entrou. 'Brand ' e 'Produto ' tem
-espaco no fim de verdade; se o script aparar, a manutencao nao reconhece a
-coluna.
+espaco no fim de verdade; se o script aparar, a manutencao nao reconhece.
 
 Tudo vai como TEXTO no xlsx: Excel nao transforma '132626-TAX' em outra coisa,
 nem corta zero a esquerda, nem reinterpreta data.
@@ -38,10 +49,9 @@ ABA_INATIVOS = "Inativos (de-para)"
 ABA_MANUTENCAO = "Manutencao CSV"
 
 COL_ID = "ID Contato"
-COL_CONTA = "ID Original"
-COL_EMAIL = "Email"
 COL_ATIVO = "Ativo"
 COL_ENTRA = "_Entra no arquivo"
+VALOR_ATIVO = "Sim"
 VERDADEIRO = {"t", "true", "sim", "s", "yes", "y", "1"}
 
 LARGURA_MIN, LARGURA_MAX, LINHAS_PARA_MEDIR = 10, 46, 400
@@ -62,10 +72,6 @@ def ler_csv(caminho):
     return linhas[0], linhas[1:]
 
 
-def tem(cabecalho, nome):
-    return any(c.strip() == nome for c in cabecalho)
-
-
 def indice(cabecalho, nome, onde):
     for i, coluna in enumerate(cabecalho):
         if coluna.strip() == nome:
@@ -73,25 +79,16 @@ def indice(cabecalho, nome, onde):
     raise SystemExit(f"{onde}: falta a coluna {nome!r}")
 
 
-def chaveiro(cabecalho, onde, por_id):
-    """Devolve uma funcao que extrai a chave de uma linha."""
-    if por_id:
-        i = indice(cabecalho, COL_ID, onde)
-        return lambda linha: linha[i].strip() if i < len(linha) else ""
-    ic = indice(cabecalho, COL_CONTA, onde)
-    ie = indice(cabecalho, COL_EMAIL, onde)
-    return lambda linha: (
-        linha[ic].strip().lower() if ic < len(linha) else "",
-        linha[ie].strip().lower() if ie < len(linha) else "",
-    )
+def campo(linha, i):
+    return linha[i].strip() if i < len(linha) else ""
 
 
 def larguras(cabecalho, linhas):
     larg = [len(t) for t in cabecalho]
     for linha in linhas[:LINHAS_PARA_MEDIR]:
-        for i, campo in enumerate(linha):
+        for i, valor in enumerate(linha):
             if i < len(larg):
-                larg[i] = max(larg[i], len(campo))
+                larg[i] = max(larg[i], len(valor))
     return [min(max(n + 2, LARGURA_MIN), LARGURA_MAX) for n in larg]
 
 
@@ -125,67 +122,53 @@ def main(argv):
     cab_export, lin_export = ler_csv(argv[1])
     cab_selecao, lin_selecao = ler_csv(argv[2])
 
-    por_id = tem(cab_export, COL_ID) and tem(cab_selecao, COL_ID)
-    chave_export = chaveiro(cab_export, "export", por_id)
-    chave_selecao = chaveiro(cab_selecao, "selecao", por_id)
-
+    i_id_exp = indice(cab_export, COL_ID, "export")
+    i_id_sel = indice(cab_selecao, COL_ID, "selecao")
+    i_entra = indice(cab_selecao, COL_ENTRA, "selecao")
     i_controle = [i for i, c in enumerate(cab_selecao) if c.strip().startswith("_")]
     controle = [cab_selecao[i].strip() for i in i_controle]
-    i_entra = indice(cab_selecao, COL_ENTRA, "selecao")
-    i_ativo = indice(cab_export, COL_ATIVO, "export")
 
-    veredito, repetidas = {}, 0
-    for linha in lin_selecao:
-        k = chave_selecao(linha)
-        repetidas += k in veredito
-        veredito[k] = linha
-    if repetidas:
-        raise SystemExit(
-            f"selecao: {repetidas} linhas com a chave repetida "
-            f"({COL_ID if por_id else f'{COL_CONTA} + {COL_EMAIL}'}).\n"
-            f"Sem {COL_ID!r} nos dois arquivos nao da para separar dois contatos\n"
-            f"que dividem o mesmo e-mail na mesma conta. Refaca o export com\n"
-            f"a coluna {COL_ID!r}."
-        )
+    veredito = {campo(l, i_id_sel): l for l in lin_selecao}
+    if len(veredito) != len(lin_selecao):
+        raise SystemExit(f"selecao: {COL_ID} repetido — a selecao devia ter um por contato")
+
+    # O que sobe sai da selecao, nao do export: um export incompleto fura a aba
+    # de conferencia, mas nao pode encolher a reativacao.
+    # ordenado por ID para bater linha a linha com a saida de reativar-csv.sql
+    lin_manutencao = sorted(([chave, VALOR_ATIVO]
+                             for chave, l in veredito.items()
+                             if campo(l, i_entra).lower() in VERDADEIRO),
+                            key=lambda l: (len(l[0]), l[0]))
 
     cab_inativos = cab_export + controle
-    lin_inativos, lin_manutencao, achados = [], [], set()
-
+    lin_inativos = []
     for linha in lin_export:
-        k = chave_export(linha)
-        sel = veredito.get(k)
-        if sel is None:
-            continue
-        achados.add(k)
-        extras = [(sel[i] if i < len(sel) else "") for i in i_controle]
-        lin_inativos.append(linha + extras)
-        if sel[i_entra].strip().lower() in VERDADEIRO:
-            nova = list(linha) + [""] * (len(cab_export) - len(linha))
-            nova[i_ativo] = "True"
-            lin_manutencao.append(nova)
+        sel = veredito.get(campo(linha, i_id_exp))
+        if sel is not None:
+            lin_inativos.append(linha + [(sel[i] if i < len(sel) else "") for i in i_controle])
 
     wb = Workbook()
     montar_aba(wb.active, ABA_INATIVOS, cab_inativos, lin_inativos)
-    montar_aba(wb.create_sheet(), ABA_MANUTENCAO, cab_export, lin_manutencao)
+    montar_aba(wb.create_sheet(), ABA_MANUTENCAO, [COL_ID, COL_ATIVO], lin_manutencao)
     wb.save(saida)
 
     csv_manutencao = saida.with_name("manutencao.csv")
     with open(csv_manutencao, "w", encoding="utf-8-sig", newline="") as f:
         escritor = csv.writer(f)
-        escritor.writerow(cab_export)
+        escritor.writerow([COL_ID, COL_ATIVO])
         escritor.writerows(lin_manutencao)
 
-    print(f"cruzamento por {COL_ID if por_id else f'{COL_CONTA} + {COL_EMAIL}'}")
     print(f"{saida}")
     print(f"  {ABA_INATIVOS:<22} {len(lin_inativos):>6} linhas · {len(cab_inativos)} colunas")
-    print(f"  {ABA_MANUTENCAO:<22} {len(lin_manutencao):>6} linhas · {len(cab_export)} colunas")
+    print(f"  {ABA_MANUTENCAO:<22} {len(lin_manutencao):>6} linhas · 2 colunas")
     print(f"{csv_manutencao}  <- e este que sobe")
 
-    faltando = len(veredito) - len(achados)
+    faltando = len(veredito) - len(lin_inativos)
     if faltando:
         print()
         print(f"  ATENCAO: {faltando} contatos da selecao nao estao no export.")
-        print("  O export precisa incluir os inativos, senao a aba sai incompleta.")
+        print(f"  So a aba '{ABA_INATIVOS}' sai incompleta — o arquivo que sobe")
+        print("  vem da selecao e continua inteiro. Reexporte incluindo os inativos.")
 
 
 if __name__ == "__main__":

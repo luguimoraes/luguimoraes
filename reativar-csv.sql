@@ -1,12 +1,16 @@
--- Contatos TR — CSV da manutenção. Exporte e suba.
+-- Contatos TR — o arquivo da manutenção. Exporte e suba.
 --
--- A manutenção casa por (Cliente, E-mail), não por ID do contato. Como cada
--- pessoa-conta do alvo tem mais de um registro com o mesmo e-mail, suba UMA
--- conta primeiro e confira se cada pessoa terminou com 1 ativo, não 2.
+-- A manutenção casa por ID do contato e grava só as colunas que estão no
+-- arquivo. Então o arquivo tem duas: a chave e o que muda. O que não está
+-- aqui ela não toca — não há como apagar Cargo, Telefone ou Benchmarking de
+-- ninguém, que era o risco de subir as 41 colunas.
 --
--- O e-mail sai como está no banco (só btrim): a coluna-chave também é gravada.
--- O WHERE derruba os e-mails quebrados, que não casariam com nada — esses
--- ficam para correção manual na tela do SenseData.
+-- Como a chave é o ID, cada linha atinge um contato só. A pessoa com dois
+-- registros de mesmo e-mail na mesma conta deixou de ser risco: o `rn = 1`
+-- escolhe qual dos dois fica ativo e o ID diz exatamente qual é.
+--
+-- Se a tela não reconhecer o cabeçalho "ID Contato", troque pelo nome exato
+-- que ela lista como obrigatório — "ID Contato (Sensedata)".
 
 WITH b AS (
   SELECT id, id_customer, btrim(email) AS email, is_active, created_at,
@@ -30,18 +34,24 @@ g AS (
                                      created_at DESC) AS rn            -- o mais recente
   FROM b WINDOW par AS (PARTITION BY lower(email), id_customer)
 )
-SELECT c.id_legacy AS "Cliente (ID Original)",
-       g.email     AS "E-mail",
-       'True'      AS "Ativo"
-FROM g JOIN public.customer c ON c.id = g.id_customer
+SELECT g.id  AS "ID Contato",
+       'Sim' AS "Ativo"
+FROM g
 WHERE g.veio AND NOT g.tem_ativo AND g.rn = 1
+  -- As quatro linhas abaixo tiram os ~47 e-mails quebrados. Elas existiam
+  -- porque a manutenção casaria por e-mail, e e-mail torto não casa com nada.
+  -- Com a chave sendo o ID isso deixou de valer: dá para reativar a pessoa
+  -- agora e corrigir o e-mail depois, na tela. Apague as quatro para trazê-los
+  -- de volta — aí o total sobe acima de 7.351 e precisa ser reconferido.
   AND g.email ~ '^[^@[:space:],;<>]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
   AND g.email !~ '\.\.'
   AND g.email !~* '\.(con|ne|cm|bra)$'
   AND g.id NOT IN (209338, 210078, 211563, 218790)  -- .co que era .com
-ORDER BY 1, 2;
+ORDER BY 1;
 
--- Piloto: acrescente `AND c.id_legacy = '132626-TAX'` ao WHERE.
+-- Piloto de uma conta só, antes de soltar os 7 mil: acrescente ao WHERE
+--   AND g.id_customer = (SELECT id FROM public.customer WHERE id_legacy = '132626-TAX')
+--
 -- Conferência depois de subir — cada pessoa-conta tem que ter 1 ativo, não 2:
 --   troque o SELECT final por
 --   SELECT count(*) FILTER (WHERE is_active) AS ativos_no_par, count(*)

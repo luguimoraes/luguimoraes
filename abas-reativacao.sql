@@ -1,15 +1,17 @@
 -- Contatos TR — quem entra no arquivo e por quê.
 --
 -- Não reconstrói as 41 colunas: elas já vêm preenchidas no export de contatos
--- do SenseData. Esta query só devolve a chave e o veredito. O cruzamento é do
--- script, que pega as linhas do export, vira o Ativo e monta as duas abas:
+-- do SenseData. Esta query só devolve a chave e o veredito, e serve à aba de
+-- conferência — quem ficou inativo, quem é afetado, quem entra e por quê.
 --
 --     python3 montar-excel.py export.csv selecao.csv contatos-reativacao.xlsx
 --
 --     export.csv    export de contatos do SenseData, com as 41 colunas
 --     selecao.csv   a saída desta query
 --
--- Sai o xlsx de duas abas e o manutencao.csv, que é o que sobe.
+-- Sai o xlsx de duas abas e o manutencao.csv de duas colunas, que é o que
+-- sobe. Para só reativar, sem a conferência, o `reativar-csv.sql` dá o mesmo
+-- arquivo direto do banco, sem passar pelo script.
 
 WITH b AS (
   SELECT id, id_customer, btrim(email) AS email, is_active, created_at,

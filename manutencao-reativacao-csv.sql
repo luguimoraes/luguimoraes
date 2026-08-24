@@ -22,35 +22,47 @@
 -- PRÉ-REQUISITO: pausar `Pré-processing_Inativa_Contatos` (2012) e
 -- `Contatos_S3_V4` (2036) antes de subir o arquivo. A carga rodou em
 -- 13, 14, 20, 21 e 24/08 — se rodar depois, desfaz a reativação.
+--
+-- REGRA DA MANUTENÇÃO (confirmada em 24/08): só CSV ou TSV; obrigatórios
+-- Cliente (ID Original) ou Cliente (ID Sensedata), mais Telefone 1/Telefone 2
+-- e/ou E-mail. Ou seja, a manutenção casa por (cliente, e-mail) — não por ID do
+-- contato. Como o alvo tem mais de um registro por pessoa-conta, isso é um
+-- risco de duplicação: meça com a seção 1 de `conferencia-antes-depois.sql` e
+-- suba o piloto antes do arquivo inteiro.
 -- ============================================================================
 
 
 -- ============================================================================
--- 0. BASE NORMALIZADA — cole no topo de cada consulta
+-- 0. BASE NORMALIZADA — referência, comentada de propósito
 -- ============================================================================
-
-WITH cc AS (
-  SELECT c.id,
-         c.id_customer,
-         lower(trim(c.email))                          AS email,
-         c.name                                        AS nome,
-         c.is_active,
-         c.created_at,
-         c.updated_at,
-         c.id_legacy                                   AS chave_gravada,
-         c.email_unsubscribe                           AS optout,
-         coalesce(c.custom_fields->'produto_contact'->>'value', '') AS produto,
-         nullif(c.custom_fields->'data_benchmark'->>'value','')     AS data_benchmark,
-         (SELECT string_agg(v.val, '; ')
-            FROM jsonb_array_elements_text(
-                   CASE jsonb_typeof(c.custom_fields #> '{benchmarking,value}')
-                     WHEN 'array'  THEN c.custom_fields #> '{benchmarking,value}'
-                     WHEN 'string' THEN jsonb_build_array(c.custom_fields #> '{benchmarking,value}')
-                     ELSE '[]'::jsonb END) AS v(val)
-           WHERE v.val <> '' AND v.val <> 'N/A')       AS benchmarking
-  FROM public.customer_contact c
-  WHERE c.custom_fields->'origem'->>'value' = 'Integração Sistema'
-)
+-- Está comentada para o arquivo inteiro rodar sem erro: um `WITH` solto no meio
+-- quebra tudo que vem depois. As seções 1, 2 e 3 já trazem a própria cópia.
+-- `email` é a versão normalizada, usada só para agrupar; `email_gravado` é o
+-- que vai no arquivo da manutenção, porque a chave dela é (cliente, e-mail).
+--
+-- WITH cc AS (
+--   SELECT c.id,
+--          c.id_customer,
+--          btrim(c.email)                                AS email_gravado,
+--          lower(trim(c.email))                          AS email,
+--          c.name                                        AS nome,
+--          c.is_active,
+--          c.created_at,
+--          c.updated_at,
+--          c.id_legacy                                   AS chave_gravada,
+--          c.email_unsubscribe                           AS optout,
+--          coalesce(c.custom_fields->'produto_contact'->>'value', '') AS produto,
+--          nullif(c.custom_fields->'data_benchmark'->>'value','')     AS data_benchmark,
+--          (SELECT string_agg(v.val, '; ')
+--             FROM jsonb_array_elements_text(
+--                    CASE jsonb_typeof(c.custom_fields #> '{benchmarking,value}')
+--                      WHEN 'array'  THEN c.custom_fields #> '{benchmarking,value}'
+--                      WHEN 'string' THEN jsonb_build_array(c.custom_fields #> '{benchmarking,value}')
+--                      ELSE '[]'::jsonb END) AS v(val)
+--            WHERE v.val <> '' AND v.val <> 'N/A')       AS benchmarking
+--   FROM public.customer_contact c
+--   WHERE c.custom_fields->'origem'->>'value' = 'Integração Sistema'
+-- )
 
 
 -- ============================================================================
@@ -69,7 +81,8 @@ WITH cc AS ( /* cole a CTE da seção 0 */
          coalesce(c.custom_fields->'produto_contact'->>'value','') AS produto,
          (SELECT string_agg(v.val,'; ') FROM jsonb_array_elements_text(
             CASE jsonb_typeof(c.custom_fields #> '{benchmarking,value}')
-              WHEN 'array' THEN c.custom_fields #> '{benchmarking,value}'
+              WHEN 'array'  THEN c.custom_fields #> '{benchmarking,value}'
+              WHEN 'string' THEN jsonb_build_array(c.custom_fields #> '{benchmarking,value}')
               ELSE '[]'::jsonb END) AS v(val)
            WHERE v.val <> '' AND v.val <> 'N/A') AS benchmarking
   FROM public.customer_contact c
@@ -121,7 +134,8 @@ WITH cc AS ( /* cole a CTE da seção 0 */
          nullif(c.custom_fields->'data_benchmark'->>'value','') AS data_benchmark,
          (SELECT string_agg(v.val,'; ') FROM jsonb_array_elements_text(
             CASE jsonb_typeof(c.custom_fields #> '{benchmarking,value}')
-              WHEN 'array' THEN c.custom_fields #> '{benchmarking,value}'
+              WHEN 'array'  THEN c.custom_fields #> '{benchmarking,value}'
+              WHEN 'string' THEN jsonb_build_array(c.custom_fields #> '{benchmarking,value}')
               ELSE '[]'::jsonb END) AS v(val)
            WHERE v.val <> '' AND v.val <> 'N/A') AS benchmarking
   FROM public.customer_contact c
@@ -163,9 +177,14 @@ JOIN public.customer cli ON cli.id = e.id_customer
 ORDER BY cli.id_legacy, e.nome, e.produto;
 
 -- Esta versão é a de conferência — as colunas extras existem para você olhar
--- antes de subir. Para gerar o CSV da manutenção direto, sem editar colunas
--- depois, rode `reativar-csv.sql`: mesma seleção, só "ID Contato" e "Ativo".
--- CONFIRME o cabeçalho que a manutenção do SenseData espera antes de subir.
+-- antes de subir. O arquivo que vai para a manutenção sai de `reativar-csv.sql`:
+-- mesma seleção, só as colunas que a manutenção exige.
+--
+-- ATENÇÃO: a manutenção casa por (Cliente, E-mail), não por ID do contato — ver
+-- o cabeçalho de `reativar-csv.sql`. O "ID Contato" desta seção serve para você
+-- conferir e para rastrear depois, mas não é ele que a manutenção usa para
+-- escolher o registro. Quem manda no risco disso é `conferencia-antes-depois.sql`,
+-- seção 1.
 
 
 -- ============================================================================

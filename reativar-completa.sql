@@ -1,7 +1,12 @@
 -- Contatos TR — lista de reativação (roda como está, somente leitura)
+-- Mesma seleção de `reativar-csv.sql`, com as colunas de apoio para conferir.
+-- `email_gravado` é o e-mail como está no banco — é ele que vai no arquivo da
+-- manutenção, porque a chave é (cliente, e-mail). `email` é só a versão
+-- normalizada usada para agrupar.
 WITH cc AS (
   SELECT c.id,
          c.id_customer,
+         btrim(c.email)                                             AS email_gravado,
          lower(trim(c.email))                                       AS email,
          c.name                                                     AS nome,
          c.is_active,
@@ -43,12 +48,13 @@ escolhido AS (
            (cc.produto <> '') DESC,
            cc.created_at DESC
 )
-SELECT e.id               AS "ID Contato",
+SELECT e.id_customer      AS "Cliente (ID Sensedata)",
+       e.email_gravado    AS "E-mail",
        'True'             AS "Ativo",
+       e.id               AS id_contato,
        cli.id_legacy      AS conta,
        cli.name           AS cliente,
        e.nome,
-       e.email,
        e.produto,
        e.benchmarking,
        e.data_benchmark,

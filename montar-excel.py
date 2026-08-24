@@ -9,20 +9,27 @@ Uso:
 
 Saem:
 
-    contatos-reativacao.xlsx   aba "Inativos (de-para)" e aba "Manutencao CSV"
-    manutencao.csv             o arquivo que realmente sobe
+    contatos-reativacao.xlsx   uma aba de conferencia e uma por lote
+    manutencao-lote-A.csv      sobe agora
+    manutencao-lote-B.csv      so depois do piloto
 
-As duas abas tem papeis diferentes e nao sao o mesmo recorte de colunas:
+As abas tem papeis diferentes e nao sao o mesmo recorte de colunas:
 
     Inativos (de-para)   as 41 colunas do export + as de controle da selecao.
                          E a aba de conferencia: quem ficou inativo e por que.
                          O 'Ativo' aqui e o estado ATUAL, ou seja, False.
 
-    Manutencao CSV       tres colunas: 'Cliente (ID Original)', 'E-mail' e
-                         'Ativo' = Sim. E o que sobe. Sao os obrigatorios da
-                         manutencao mais o que muda; como ela grava so as
-                         colunas presentes, tres nao tem como apagar Cargo,
-                         Telefone ou Benchmarking de ninguem.
+    Manutencao lote A    tres colunas: 'Cliente (ID Original)', 'E-mail' e
+    Manutencao lote B    'Ativo' = Sim. Sao os obrigatorios da manutencao mais
+                         o que muda; como ela grava so as colunas presentes,
+                         tres nao tem como apagar Cargo, Telefone ou
+                         Benchmarking de ninguem.
+
+                         No lote A a dupla (Cliente, E-mail) acha um contato
+                         so — sem ambiguidade, sobe direto. No lote B ela acha
+                         mais de um, e o resultado depende de a manutencao
+                         casar respeitando a caixa do e-mail ou nao. Quem
+                         separa os dois e a coluna '_Lote' da selecao.
 
 O arquivo que sobe sai da SELECAO, nao do export: se o export vier incompleto,
 a aba de conferencia sai furada mas a reativacao continua inteira.
@@ -53,12 +60,13 @@ from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
 ABA_INATIVOS = "Inativos (de-para)"
-ABA_MANUTENCAO = "Manutencao CSV"
+ABA_MANUTENCAO = "Manutencao lote {}"
 
 COL_ID = "ID Contato"
 COL_CONTA = "ID Original"
 COL_EMAIL = "Email"
 COL_ENTRA = "_Entra no arquivo"
+COL_LOTE = "_Lote"
 
 # cabecalho do arquivo que sobe: os obrigatorios da manutencao + o que muda
 CAB_MANUTENCAO = ["Cliente (ID Original)", "E-mail", "Ativo"]
@@ -138,6 +146,7 @@ def main(argv):
     i_conta = indice(cab_selecao, COL_CONTA, "selecao")
     i_email = indice(cab_selecao, COL_EMAIL, "selecao")
     i_entra = indice(cab_selecao, COL_ENTRA, "selecao")
+    i_lote = indice(cab_selecao, COL_LOTE, "selecao")
     i_controle = [i for i, c in enumerate(cab_selecao) if c.strip().startswith("_")]
     controle = [cab_selecao[i].strip() for i in i_controle]
 
@@ -147,17 +156,22 @@ def main(argv):
 
     # O que sobe sai da selecao, nao do export: um export incompleto fura a aba
     # de conferencia, mas nao pode encolher a reativacao.
-    lin_manutencao = sorted(([campo(l, i_conta), campo(l, i_email), VALOR_ATIVO]
-                             for l in lin_selecao
-                             if campo(l, i_entra).lower() in VERDADEIRO),
-                            key=lambda l: (l[0], l[1].lower()))
+    lotes = {}
+    for linha in lin_selecao:
+        if campo(linha, i_entra).lower() not in VERDADEIRO:
+            continue
+        alvo = lotes.setdefault(campo(linha, i_lote) or "?", [])
+        alvo.append([campo(linha, i_conta), campo(linha, i_email), VALOR_ATIVO])
+    for linhas in lotes.values():
+        linhas.sort(key=lambda l: (l[0], l[1].lower()))
 
     # A manutencao casa por (Cliente, E-mail) e nao enxerga caixa nem ID. Duas
     # linhas com a mesma dupla mandariam ordens ambiguas para o mesmo par.
-    pares = {(l[0], l[1].lower()) for l in lin_manutencao}
-    if len(pares) != len(lin_manutencao):
+    subindo = [l for linhas in lotes.values() for l in linhas]
+    pares = {(l[0], l[1].lower()) for l in subindo}
+    if len(pares) != len(subindo):
         raise SystemExit(
-            f"selecao: {len(lin_manutencao) - len(pares)} linhas repetem "
+            f"selecao: {len(subindo) - len(pares)} linhas repetem "
             f"(Cliente, E-mail) no arquivo que sobe.\n"
             "A manutencao nao separa duas linhas da mesma dupla — a selecao\n"
             "tem que escolher UM registro por pessoa-conta antes de chegar aqui."
@@ -172,19 +186,26 @@ def main(argv):
 
     wb = Workbook()
     montar_aba(wb.active, ABA_INATIVOS, cab_inativos, lin_inativos)
-    montar_aba(wb.create_sheet(), ABA_MANUTENCAO, CAB_MANUTENCAO, lin_manutencao)
+    for lote in sorted(lotes):
+        montar_aba(wb.create_sheet(), ABA_MANUTENCAO.format(lote),
+                   CAB_MANUTENCAO, lotes[lote])
     wb.save(saida)
-
-    csv_manutencao = saida.with_name("manutencao.csv")
-    with open(csv_manutencao, "w", encoding="utf-8-sig", newline="") as f:
-        escritor = csv.writer(f)
-        escritor.writerow(CAB_MANUTENCAO)
-        escritor.writerows(lin_manutencao)
 
     print(f"{saida}")
     print(f"  {ABA_INATIVOS:<22} {len(lin_inativos):>6} linhas · {len(cab_inativos)} colunas")
-    print(f"  {ABA_MANUTENCAO:<22} {len(lin_manutencao):>6} linhas · {len(CAB_MANUTENCAO)} colunas")
-    print(f"{csv_manutencao}  <- e este que sobe")
+    for lote in sorted(lotes):
+        aba = ABA_MANUTENCAO.format(lote)
+        print(f"  {aba:<22} {len(lotes[lote]):>6} linhas · {len(CAB_MANUTENCAO)} colunas")
+
+    print()
+    for lote in sorted(lotes):
+        arquivo = saida.with_name(f"manutencao-lote-{lote}.csv")
+        with open(arquivo, "w", encoding="utf-8-sig", newline="") as f:
+            escritor = csv.writer(f)
+            escritor.writerow(CAB_MANUTENCAO)
+            escritor.writerows(lotes[lote])
+        quando = "sobe agora" if lote == "A" else "so depois do piloto"
+        print(f"{arquivo}  <- {quando}")
 
     faltando = len(veredito) - len(lin_inativos)
     if faltando:

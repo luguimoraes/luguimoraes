@@ -34,11 +34,17 @@ WITH b AS (
   FROM public.customer_contact
   WHERE custom_fields->'origem'->>'value' = 'Integração Sistema'
 ),
+todos AS (   -- o que a dupla (conta, e-mail) acha na base INTEIRA, não só na
+             -- integração: a manutenção também não olha só para ela
+  SELECT id_customer, lower(btrim(email)) AS chave,
+         count(*)           AS n,
+         bool_or(is_active) AS tem_ativo
+  FROM public.customer_contact
+  GROUP BY 1, 2
+),
 g AS (
   SELECT *,
-         bool_or(is_active)                       OVER par AS tem_ativo,
          bool_or(created_at >= DATE '2026-08-13') OVER par AS veio,
-         count(*)                                 OVER par AS no_par,
          row_number() OVER (PARTITION BY lower(email), id_customer
                             ORDER BY (benchmarking IS NOT NULL) DESC,
                                      (produto <> '') DESC, created_at DESC) AS rn
@@ -47,14 +53,20 @@ g AS (
 SELECT g.id        AS "ID Contato",
        c.id_legacy AS "ID Original",
        g.email     AS "Email",
-       CASE WHEN g.tem_ativo THEN 'OK — pessoa tem ativo'
+       CASE WHEN t.tem_ativo THEN 'OK — pessoa ja tem contato ativo na conta'
             WHEN NOT g.veio  THEN 'inativo correto — nao veio no arquivo'
             ELSE 'AFETADO — veio no arquivo e esta sem ativo' END AS "_Veredito",
-       g.no_par                                                   AS "_Registros no par",
+       t.n                                                        AS "_Registros no par",
        CASE WHEN NOT g.email_ok THEN 'e-mail quebrado — corrigir na mao no SenseData'
             WHEN g.rn > 1       THEN 'outro registro da mesma pessoa foi escolhido'
        END                                                        AS "_Fora do arquivo por",
-       g.veio AND NOT g.tem_ativo AND g.rn = 1 AND g.email_ok     AS "_Entra no arquivo"
-FROM g JOIN public.customer c ON c.id = g.id_customer
+       e.entra                                                    AS "_Entra no arquivo",
+       CASE WHEN e.entra AND t.n = 1 THEN 'A'
+            WHEN e.entra             THEN 'B' END                 AS "_Lote"
+FROM g
+JOIN public.customer c ON c.id = g.id_customer
+JOIN todos t ON t.id_customer = g.id_customer AND t.chave = lower(g.email)
+CROSS JOIN LATERAL (SELECT g.veio AND NOT t.tem_ativo
+                           AND g.rn = 1 AND g.email_ok AS entra) e
 WHERE NOT g.is_active
 ORDER BY 2, 3;

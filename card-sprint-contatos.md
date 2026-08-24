@@ -41,16 +41,25 @@ Distribuição em 9.562 pessoas-conta distintas (origem `Integração Sistema`, 
 
 ### 2.0 — O número que mede o estrago
 
-Reconstrução do estado de 10/08 sobre o export completo de 24/08 (35.543 registros):
+Cruzamento do snapshot de 13/08 (16.945 linhas, com `Ativo` medido) contra o export completo de
+24/08 (35.543 registros), casando por `ID Contato` — número **medido**, não inferido:
 
-| | Registros | Pessoas-conta |
-|---|---|---|
-| Ativos em 10/08 (`Integração Sistema`) | 10.495 | 8.893 |
-| Desses, ainda ativos hoje | **0** | — |
-| Sem nenhum contato ativo hoje | — | **6.950** (78%) |
+| Estado em 13/08 | Ativo hoje | Inativo hoje | Sumiu da base |
+|---|---|---|---|
+| **Ativo (6.257)** | **0** | 6.203 | 54 |
+| Inativo (10.688) | 0 | 10.542 | 146 |
 
-**Nenhum registro foi apagado** — nenhuma pessoa-conta desapareceu da base. A recuperação é
-integralmente possível.
+**Nenhum contato ativo em 13/08 continua ativo.** E o snapshot de 13/08 já é posterior à primeira
+onda (22h43), então esse número **subestima** o estado de 10/08.
+
+> **200 registros sumiram da base** entre 13/08 e 24/08 — 54 deles estavam ativos —, concentrados
+> em 24 contas. Não é desativação: é ausência do registro. Investigar antes de reativar; pode
+> haver exclusão de conta envolvida. É o cenário irreversível descrito no runbook (C.1).
+
+Sobre o estado de 10/08 especificamente: a onda de 24/08 sobrescreveu `updated_at` em toda a base,
+o que destruiu a única evidência que permitia reconstruí-lo por inferência. A reconstrução hoje
+devolve 10.495 registros, mas isso **superestima** — inclui registros que já estavam inativos antes
+de 10/08 e foram recarimbados. O número real exige a listagem do dia 10 (seção D das queries).
 
 Os 2.052 ativos de hoje são todos registros **novos**: 2.051 criados em 20/08 e 1 em 22/08.
 Nenhum contato que o cliente via em 10/08 sobreviveu.

@@ -258,48 +258,154 @@ ORDER BY id, chave;
 
 
 -- ============================================================================
--- D. SE VOCÊ IMPORTAR OS ARQUIVOS GERADOS (stg_contatos_bkp_10 / stg_contatos_atual)
+-- D. O DE-PARA 10/08 x HOJE — cruzar a listagem do cliente com a base
 -- ============================================================================
--- Só vale a pena se o arquivo do dia 10 for anterior a 13/08 22h43. Se for
--- posterior, ele já está contaminado e a seção A dá resposta melhor.
+-- POR QUE ESTA SEÇÃO EXISTE, E NÃO DÁ PARA FAZER SÓ COM A SEÇÃO A:
 --
--- Ao importar, três coisas quebram em silêncio:
---   · `is_active` vem como TEXTO ('TRUE'/'FALSE') — `= true` não funciona;
---   · se o CSV veio da tela do SenseData, `custom_fields` sai em formato Python
---     ('chave': {'value': ...}, aspas simples) e NÃO converte para jsonb — use a
---     coluna `produto` que o próprio export já traz pronta;
---   · cruzar por (email, id_customer) infla; os dois snapshots são da mesma
---     tabela, então case por `id`, que é estável.
+-- A onda de 24/08 13h13 sobrescreveu `updated_at` em TODOS os registros de
+-- `Integração Sistema`. A inferência da seção A depende de `updated_at` para
+-- separar "estava ativo e foi desligado" de "já estava inativo antes" — e essa
+-- separação deixou de existir. Hoje a seção A devolve TODO registro criado antes
+-- de 10/08 como se estivesse ativo naquele dia, o que superestima a perda.
+--
+-- Medido em 24/08: a seção A devolve 10.495; o snapshot real de 13/08 mostra
+-- 6.257 ativos. A diferença são registros que JÁ estavam inativos e foram
+-- recarimbados. Portanto: para dar número ao cliente, cruze com uma listagem
+-- de verdade. Só a listagem prova o estado.
+--
+-- Cada nova execução da carga piora isso. Pausar preserva a evidência.
+-- ============================================================================
 
--- D.1 · Sanidade: o arquivo do dia 10 é mesmo anterior à primeira onda?
-SELECT count(*)                                                        AS linhas,
-       count(*) FILTER (WHERE lower(nullif(is_active::text,'')) IN ('true','t','1','sim'))
-                                                                       AS ativos,
-       min(created_at) AS criado_mais_antigo,
-       max(updated_at) AS ultima_alteracao
-FROM stg_contatos_bkp_10;
--- `ultima_alteracao` precisa ser ANTERIOR a 2026-08-13 22:43.
--- `ativos` perto de 6.257 = patamar pré-primeira-onda. Perto de 2.053 = pós-20/08,
--- não serve como linha de base.
+-- Importe a listagem do dia 10 como `stg_contatos_10ago`, com no mínimo:
+--   id_contato (se houver) · email · conta · ativo
+-- Se a listagem for do próprio cliente e não tiver o ID do SenseData, use D.3.
 
--- D.2 · Comparação antes x depois, por registro
-SELECT cli.id_legacy AS conta,
-       b.name        AS nome_contato,
-       b.email,
-       coalesce(b.custom_fields->'produto_contact'->>'value', '—') AS produto_dia_10,
-       CASE WHEN a.id IS NULL THEN 'SUMIU DA BASE (expurgo?)' ELSE 'desativado' END
-                     AS o_que_aconteceu,
-       b.id_legacy   AS chave_no_dia_10,
-       a.id_legacy   AS chave_hoje,
-       (b.id_legacy IS DISTINCT FROM a.id_legacy) AS chave_reescrita,
-       a.updated_at  AS ultima_alteracao
-FROM stg_contatos_bkp_10 b
-LEFT JOIN stg_contatos_atual a ON a.id = b.id          -- pelo id, não pelo email
-JOIN public.customer cli       ON cli.id = b.id_customer
-WHERE cli.id_legacy = '132626-TAX'
-  AND      lower(nullif(b.is_active::text,'')) IN ('true','t','1','sim')
-  AND (a.id IS NULL OR NOT lower(nullif(a.is_active::text,'')) IN ('true','t','1','sim'))
-ORDER BY a.updated_at DESC NULLS FIRST;
 
--- `updated_at` é a última alteração de QUALQUER tipo, não a data da inativação:
--- registro desligado em 13/08 e recarimbado em 21/08 aparece como 21/08.
+-- ----------------------------------------------------------------------------
+-- D.1 · Conferir o import antes de tirar conclusão
+-- ----------------------------------------------------------------------------
+SELECT count(*)                                                          AS linhas,
+       count(*) FILTER (WHERE lower(nullif(ativo::text,'')) IN ('true','t','1','sim'))
+                                                                         AS ativos,
+       count(DISTINCT conta)                                             AS contas,
+       count(*) FILTER (WHERE id_contato IS NULL OR id_contato::text = '') AS sem_id
+FROM stg_contatos_10ago;
+-- Se `ativos` vier perto de 6.257, a listagem é POSTERIOR à primeira onda
+-- (13/08 22h43) e já mede uma base contaminada — ela subestima a perda.
+-- Se vier acima disso, é anterior à onda e serve como linha de base real.
+
+
+-- ----------------------------------------------------------------------------
+-- D.2 · DE-PARA por ID Contato  ← use este se a listagem tiver o ID
+-- ----------------------------------------------------------------------------
+WITH dez AS (
+  SELECT (id_contato)::bigint AS id,
+         lower(trim(email))   AS email,
+         conta,
+         (lower(nullif(ativo::text,'')) IN ('true','t','1','sim')) AS ativo_em_10
+  FROM stg_contatos_10ago
+  WHERE id_contato IS NOT NULL AND id_contato::text <> ''
+),
+cc AS (
+  SELECT c.id, c.name, c.email, c.id_customer, c.is_active, c.id_legacy, c.updated_at,
+         c.custom_fields->'produto_contact'->>'value' AS produto,
+         (SELECT string_agg(v.val, '; ')
+            FROM jsonb_array_elements_text(
+                   CASE jsonb_typeof(c.custom_fields #> '{benchmarking,value}')
+                     WHEN 'array'  THEN c.custom_fields #> '{benchmarking,value}'
+                     WHEN 'string' THEN jsonb_build_array(c.custom_fields #> '{benchmarking,value}')
+                     ELSE '[]'::jsonb END) AS v(val)
+           WHERE v.val <> '' AND v.val <> 'N/A') AS benchmarking
+  FROM public.customer_contact c
+)
+SELECT CASE
+         WHEN cc.id IS NULL      THEN 'SUMIU DA BASE'
+         WHEN cc.is_active       THEN 'continua ativo'
+         ELSE 'DESATIVADO desde 10/08'
+       END                       AS resultado,
+       count(*)                  AS contatos,
+       count(*) FILTER (WHERE cc.benchmarking IS NOT NULL) AS com_benchmarking
+FROM dez
+LEFT JOIN cc ON cc.id = dez.id
+WHERE dez.ativo_em_10
+GROUP BY 1
+ORDER BY 2 DESC;
+
+-- Troque o GROUP BY pela lista nominal quando precisar do arquivo:
+--   SELECT cli.id_legacy AS conta, cc.name, cc.email, cc.produto, cc.benchmarking,
+--          cc.id AS id_contato, cc.id_legacy AS chave_gravada
+--   FROM dez JOIN cc ON cc.id = dez.id
+--   JOIN public.customer cli ON cli.id = cc.id_customer
+--   WHERE dez.ativo_em_10 AND NOT cc.is_active
+--   ORDER BY cli.id_legacy, cc.name;
+-- Essa lista, com `Ativo = True`, É o arquivo da carga de reativação.
+
+-- 'SUMIU DA BASE' > 0 é o alerta de expurgo. Medido no cruzamento 13/08 x 24/08:
+-- 200 registros sumiram, 54 deles ativos, concentrados em 24 contas. Investigar
+-- antes de reativar — pode haver exclusão de conta envolvida.
+
+
+-- ----------------------------------------------------------------------------
+-- D.3 · DE-PARA por (email, conta) — se a listagem não tiver o ID do SenseData
+-- ----------------------------------------------------------------------------
+-- AGREGA ANTES DE CRUZAR. Sem isso o join multiplica: há 9.110 pessoas-conta
+-- com 2+ registros, inflação de ~3,3x.
+
+WITH dez AS (
+  SELECT lower(trim(email)) AS email, conta,
+         bool_or(lower(nullif(ativo::text,'')) IN ('true','t','1','sim')) AS tinha_ativo
+  FROM stg_contatos_10ago
+  GROUP BY 1, 2
+),
+hoje AS (
+  SELECT lower(trim(cc.email)) AS email,
+         cli.id_legacy         AS conta,
+         count(*)                                  AS registros_hoje,
+         count(*) FILTER (WHERE cc.is_active)      AS ativos_hoje,
+         max(cc.id) FILTER (WHERE cc.is_active)    AS id_ativo
+  FROM public.customer_contact cc
+  JOIN public.customer cli ON cli.id = cc.id_customer
+  GROUP BY 1, 2
+)
+SELECT CASE
+         WHEN hoje.email IS NULL           THEN 'SUMIU DA BASE'
+         WHEN hoje.ativos_hoje = 0         THEN 'PERDEU TODA PRESENCA ATIVA'
+         ELSE 'tem contato ativo'
+       END                                 AS resultado,
+       count(*)                            AS pessoas_conta,
+       count(DISTINCT dez.conta)           AS contas
+FROM dez
+LEFT JOIN hoje ON hoje.email = dez.email AND hoje.conta = dez.conta
+WHERE dez.tinha_ativo
+GROUP BY 1
+ORDER BY 2 DESC;
+
+-- 'PERDEU TODA PRESENCA ATIVA' é o número honesto do impacto: a pessoa sumiu da
+-- tela da conta. É diferente de contar registros desligados, que superestima
+-- porque a recriação desliga o antigo e cria um novo ativo para a mesma pessoa.
+
+
+-- ----------------------------------------------------------------------------
+-- D.4 · Resumo por conta — a "lista de contatos inativos" pedida pelo cliente
+-- ----------------------------------------------------------------------------
+WITH dez AS (
+  SELECT conta, count(*) FILTER (WHERE lower(nullif(ativo::text,'')) IN ('true','t','1','sim'))
+                                                  AS ativos_em_10
+  FROM stg_contatos_10ago GROUP BY 1
+),
+hoje AS (
+  SELECT cli.id_legacy AS conta, cli.name AS cliente,
+         count(*) FILTER (WHERE cc.is_active AND cc.custom_fields->'origem'->>'value' = 'Integração Sistema')
+                                                  AS ativos_hoje
+  FROM public.customer_contact cc
+  JOIN public.customer cli ON cli.id = cc.id_customer
+  GROUP BY 1, 2
+)
+SELECT hoje.conta, hoje.cliente,
+       coalesce(dez.ativos_em_10, 0) AS ativos_em_10,
+       hoje.ativos_hoje,
+       hoje.ativos_hoje - coalesce(dez.ativos_em_10, 0) AS diferenca
+FROM hoje
+LEFT JOIN dez ON dez.conta = hoje.conta
+WHERE hoje.ativos_hoje <> coalesce(dez.ativos_em_10, 0)
+ORDER BY diferenca ASC, hoje.conta;

@@ -1,0 +1,4 @@
+requests>=2.31,<3
+# Airflow não entra aqui de propósito: o DAG roda no scheduler, que já tem a
+# própria versão instalada. Fixar Airflow em requirements de projeto costuma
+# brigar com o ambiente do cluster.

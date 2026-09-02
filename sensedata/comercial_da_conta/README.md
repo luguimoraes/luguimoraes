@@ -154,6 +154,46 @@ da carga e antes da janela das réguas. Variáveis do Airflow: `sensedata_api_ke
 
 Testes: `python3 -m unittest discover -s tests`
 
+## Checklist de implantação
+
+Ordem recomendada — o passo 1 é o que destrava ou não o resto.
+
+1. **Confirmar com o suporte (ticket 496060) se a API v2 grava campo do tipo
+   lista de usuários** e em que formato (e-mail, nome ou ID do usuário). A tela
+   de Manutenção via CSV não atualiza esse tipo, então a API é o caminho — se
+   ela também não gravar, a demanda vira pedido para a Zenvia e nenhuma
+   integração deste lado resolve.
+2. **Anotar o nome interno do campo** em Configurações > Campos Customizados.
+   É ele que vai no payload (o rótulo é `Comercial `, o nome interno deve ser
+   `comercial_da_conta`) — a documentação da SenseConnect exige o nome interno,
+   nunca o rótulo.
+3. **Gerar a API key** e guardá-la como variável de ambiente (`.env`) ou Variable
+   do Airflow (`sensedata_api_key`). Nunca no código.
+4. **Validar sem gravar**: `python3 sync.py --mode dry-run`. Confere contagem de
+   updates e o CSV de pendências.
+5. **Gravar uma conta só**:
+   `python3 sync.py --mode apply --only-customer 143467-LEGAL` e conferir a
+   Visão 360 do MARIMEX. Se o valor não aparecer, trocar `--value-mode`
+   (`email` → `name` → `id`) até o campo aceitar.
+6. **Rodar a base toda**: `python3 sync.py --mode apply` (1.946 clientes na
+   primeira carga; nas seguintes só o que mudou).
+7. **Agendar** a DAG `sensedata_comercial_da_conta` (07h America/Sao_Paulo) ou o
+   cron equivalente, sempre depois da carga diária.
+8. **Tratar as pendências** do CSV: criar os usuários faltantes ou corrigir o
+   campo `Comercial` das contas.
+9. **Configurar a guarda na régua** para não disparar com o campo vazio.
+
+### Onde a integração deve morar
+
+A rotina lê e escreve no próprio SenseData (clientes + usuários → campo
+customizado), sem depender de Salesforce ou banco intermediário. Volume baixo:
+~2.000 clientes por execução e uma chamada `PUT` apenas para quem mudou.
+
+Alternativa a considerar: o campo `Comercial` (texto) já é alimentado por alguma
+integração existente. Estender essa integração para gravar também o
+`comercial_da_conta` elimina uma rotina separada — vale avaliar se ela consegue
+escrever campo do tipo lista de usuários.
+
 ## Ajustes complementares na régua 304 (UI, fora deste repositório)
 
 O remetente já aponta para *Comercial da Conta* — não precisa mexer nisso. O que

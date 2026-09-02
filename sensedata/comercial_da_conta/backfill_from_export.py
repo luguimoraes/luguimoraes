@@ -6,7 +6,10 @@ de usuários (ambos delimitados por "|", como saem da plataforma) e produz:
 
   * ``--out``     – arquivo pronto para Configurações > Clientes > Manutenção via
     CSV (ação Atualização), com o ID do cliente e o comercial resolvido;
-  * ``--pending`` – clientes que ficaram sem comercial resolvido, com o motivo.
+  * ``--pending`` – clientes que ficaram sem comercial resolvido, com o motivo;
+  * ``--report``  – opcional: todos os clientes analisados com o remetente atual
+    (campo CS) ao lado do comercial resolvido, para dimensionar o impacto de
+    repontar a régua para o campo ``comercial_da_conta``.
 
 Usa a mesma regra da rotina diária (``resolver.py``): o nome que está no campo
 "Comercial" do cliente é resolvido para um usuário da plataforma.
@@ -23,7 +26,7 @@ import csv
 import sys
 from collections import Counter
 
-from resolver import SOURCE_CUSTOMER_FIELD, Customer, User, plan_updates, summarize
+from resolver import SOURCE_CUSTOMER_FIELD, Customer, User, normalize, plan_updates, summarize
 
 
 def read_export(path: str, delimiter: str, encoding: str) -> list[dict]:
@@ -45,6 +48,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", default="carga_comercial_da_conta.csv")
     parser.add_argument("--out-field-column", default="comercial_da_conta", help="Cabeçalho do CF no arquivo gerado")
     parser.add_argument("--pending", default="pendencias_comercial_da_conta.csv")
+    parser.add_argument("--report", default="", help="CSV com CS atual x comercial resolvido (opcional)")
+    parser.add_argument("--cs-column", default="CS", help="Coluna com o remetente usado hoje pela régua")
     args = parser.parse_args(argv)
 
     user_rows = read_export(args.users, args.delimiter, args.encoding)
@@ -62,6 +67,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.status:
         customer_rows = [row for row in customer_rows if (row.get("Status") or "").strip() == args.status]
+
+    cs_by_id = {row.get("ID Original", ""): (row.get(args.cs_column) or "").strip() for row in customer_rows}
 
     customers = [
         Customer(
@@ -104,6 +111,28 @@ def main(argv: list[str] | None = None) -> int:
                 decision.reason,
             ])
     print(f"Pendências          : {args.pending} ({len(pending)} clientes)")
+
+    if args.report:
+        with open(args.report, "w", newline="", encoding="utf-8") as handle:
+            writer = csv.writer(handle)
+            writer.writerow([
+                "ID Original", "Cliente", "CS (remetente hoje)", "Comercial (texto)",
+                "Comercial resolvido", "Situação", "Remetente muda?",
+            ])
+            for decision in decisions:
+                customer = decision.customer
+                cs_atual = cs_by_id.get(customer.id_original, "")
+                muda = "sim" if decision.value and normalize(cs_atual) != normalize(decision.value_user_name) else "nao"
+                writer.writerow([
+                    customer.id_original,
+                    customer.name,
+                    cs_atual,
+                    customer.commercial_name,
+                    decision.value,
+                    decision.reason,
+                    muda if decision.value else "sem comercial",
+                ])
+        print(f"Relatório           : {args.report} ({len(decisions)} clientes)")
 
     if pending:
         print("\nNomes que não casaram com nenhum usuário ativo:")

@@ -514,6 +514,26 @@ class BackfillFromExportTest(unittest.TestCase):
         self.run_backfill("--value-mode", "name", "--id-column", "ID Sensedata")
         self.assertEqual(self.read(self.out)[1], ["24870533", "Lorraine Ferreira"])
 
+    def test_report_compares_current_sender_with_resolved_commercial(self):
+        report = os.path.join(self.tmp, "relatorio.csv")
+        self.run_backfill("--report", report)
+        rows = {row[0]: row for row in self.read(report)[1:]}
+        # MARIMEX: remetente hoje é o CS genérico, comercial resolvido é a Lorraine.
+        self.assertEqual(rows["143467-LEGAL"][2], "Relacionamento Customer Success")
+        self.assertEqual(rows["143467-LEGAL"][4], "lorraine.ferreira@thomsonreuters.com")
+        self.assertEqual(rows["143467-LEGAL"][6], "sim")
+
+    def test_report_marks_customers_without_commercial(self):
+        report = os.path.join(self.tmp, "relatorio.csv")
+        self.run_backfill("--report", report)
+        rows = {row[0]: row for row in self.read(report)[1:]}
+        self.assertEqual(rows["143449-LEGAL"][6], "sem comercial")
+        self.assertEqual(rows["142796-GTM"][5], "user_not_found")
+
+    def test_report_is_optional(self):
+        self.run_backfill()
+        self.assertEqual([name for name in os.listdir(self.tmp) if "relatorio" in name], [])
+
     def test_summary_is_printed(self):
         _, output = self.run_backfill()
         self.assertIn("update", output)

@@ -9,9 +9,12 @@ Origem: ticket Zenvia **496060** — a régua
 [regra/304](https://thomson-reuters.sensedata.io/regra/304) enviou o comunicado
 com remetente *Relacionamento CS* em vez do comercial da conta.
 
-## Diagnóstico (medido nos exports de 02/09/2026)
+## Diagnóstico (exports de 02/09/2026 + e-mails disparados)
 
-Não é bug da régua. O campo existe, mas **nunca foi alimentado**:
+São **dois problemas independentes**, e o segundo é o que faz o e-mail sair com
+o nome errado.
+
+### 1. O campo `comercial_da_conta` nunca foi alimentado
 
 | Medição | Resultado |
 | --- | --- |
@@ -19,19 +22,36 @@ Não é bug da régua. O campo existe, mas **nunca foi alimentado**:
 | CF `comercial_da_conta` (coluna `"Comercial "`) preenchido | **0 de 4.461** |
 | Campo `Comercial` (texto, origem) preenchido | 4.442 de 4.461 |
 | Usuários na plataforma | 112, todos ativos, sem homônimos |
-| Clientes ativos cujo `Comercial` casa com um usuário ativo | **1.946 (94%)** |
+| Clientes ativos resolvíveis automaticamente | **1.946 (94%)** |
 | Clientes ativos sem correspondência | 124 (120 nomes órfãos + 4 sem comercial) |
 
-Com o campo vazio em 100% da base, a régua 304 sempre cai no remetente padrão.
-Confirmação nos dois casos citados no ticket:
+### 2. A régua 304 usa o campo `CS` como remetente, não o `comercial_da_conta`
 
-| Cliente | `Comercial` (texto) | CF hoje | Usuário resolvido |
-| --- | --- | --- | --- |
-| `143468-TAX` — TAX OCP DO BRASIL | Luciana Pasquarelli Fernandes | vazio | `luciana.pasquarellifernandes@thomsonreuters.com` |
-| `143467-LEGAL` — LEGAL MARIMEX | Lorraine Ferreira | vazio | `lorraine.ferreira@thomsonreuters.com` |
+Conferência dos comunicados enviados contra a base:
 
-O `CS` da conta MARIMEX é o usuário *Relacionamento Customer Success*
-(`relacionamentocs@thomsonreuters.com`) — por isso o e-mail saiu com esse nome.
+| Cliente | Enviado | Remetente do e-mail | `CS` na base | `Comercial` |
+| --- | --- | --- | --- | --- |
+| `143493-LEGAL` SINDICATO | 29/08 | Patricia Monteiro | **Patricia Monteiro** ✅ | Luciano Neves ❌ |
+| `143506-TAX` AMERICAN TOWER | 01/09 | Fernando Santos | **Fernando Santos** ✅ | Erika Simoes ❌ |
+| `143467-LEGAL` MARIMEX | 20/08 | Relacionamento CS | **Relacionamento CS** ✅ | Lorraine Ferreira ❌ |
+| `143496-TAX` SUMIDENSO | 29/08 | Relacionamento CS | Fernando Santos¹ | Kelly Cristina Leal ❌ |
+
+¹ Conta registrada em 27/08 e comunicado em 29/08: o CS nomeado entrou depois do
+disparo — o export é um retrato de 02/09.
+
+O remetente nunca coincide com o `Comercial`, e coincide com o `CS` em todos os
+casos verificáveis. **Preencher o campo não muda o remetente sozinho**: é preciso
+repontar a régua para `comercial_da_conta`. Dimensionamento: 522 dos 2.070
+clientes ativos (25%) têm `CS` = *Relacionamento Customer Success*, e nos 16
+clientes registrados desde 01/08 o `CS` difere do `Comercial` em **16 de 16**.
+
+### 3. Saudação vazia ("Olá , Tudo bem?")
+
+Problema de cadastro de contato, não da régua: a saudação usa o nome do contato
+destinatário. Nos comunicados enviados para `jaqueline.c.rodrigues` (cópia de
+teste) o contato não tem nome preenchido — daí `Olá ,`. No caso do SINDICATO o
+contato está cadastrado como `patricia.damasio` (login do e-mail), e foi isso que
+saiu no texto. Entre os 16 clientes recentes há 3 com *Sponsor* vazio.
 
 ### Pendências que a rotina não resolve sozinha
 
@@ -74,7 +94,7 @@ Motivos registrados: `matched_by_email`, `matched_by_name`, `up_to_date`,
 | `backfill_from_export.py` | Carga inicial offline a partir dos exports (sem API) |
 | `airflow/dag_sensedata_comercial_da_conta.py` | DAG diária (07h America/Sao_Paulo, após a carga) |
 | `sql/auditoria_comercial_da_conta.sql` | Conferência da mesma regra na base espelho |
-| `tests/` | 57 testes (`unittest`), sem rede |
+| `tests/` | 60 testes (`unittest`), sem rede |
 
 Python 3.9+ e biblioteca padrão — sem dependências externas.
 
@@ -96,7 +116,9 @@ via CSV*, ação **Atualização**. Opções úteis:
 - `--value-mode name` gera o nome do usuário em vez do e-mail (usar se o campo
   de lista de usuários não aceitar e-mail);
 - `--id-column "ID Sensedata"` troca a chave do arquivo;
-- `--status ""` inclui também os clientes inativos.
+- `--status ""` inclui também os clientes inativos;
+- `--report relatorio.csv` gera a comparação "remetente hoje (CS) x comercial
+  resolvido", usada para dimensionar a troca na régua.
 
 > O export traz duas colunas parecidas: `Comercial` (texto de origem) e
 > `Comercial ` — **com espaço no fim** — que é o CF alvo. O script lê as duas
@@ -118,14 +140,21 @@ da carga e antes da janela das réguas. Variáveis do Airflow: `sensedata_api_ke
 
 Testes: `python3 -m unittest discover -s tests`
 
-## Ajuste complementar na régua 304
+## Ajustes necessários na régua 304 (UI, fora deste repositório)
 
-Mesmo com a rotina rodando, os ~124 clientes sem comercial resolvível seguiriam
-disparando com o remetente padrão. Recomendação (configuração na UI, fora deste
-repositório):
+A rotina resolve o dado; a régua precisa de três mudanças para o e-mail sair
+correto:
 
-1. Condição de guarda: não disparar quando `comercial_da_conta` estiver vazio;
-2. Ou remetente em cascata explícito: comercial da conta → gerente comercial → CS.
+1. **Trocar o remetente** de `CS` para `comercial_da_conta` — sem isso o
+   comunicado continua saindo em nome do CS mesmo com o campo preenchido;
+2. **Condição de guarda**: não disparar quando `comercial_da_conta` estiver
+   vazio (protege os ~124 clientes sem comercial resolvível), ou cascata
+   explícita comercial → gerente comercial → CS;
+3. **Fallback na saudação**: usar o nome do contato e, quando vazio, um texto
+   neutro — hoje sai `Olá ,`.
+
+Vale lembrar que repontar o remetente muda o nome em **todos** os 1.946 clientes
+resolvíveis, já que `CS` e `Comercial` nunca coincidem na base.
 
 ## Parâmetros a confirmar antes do primeiro `apply`
 

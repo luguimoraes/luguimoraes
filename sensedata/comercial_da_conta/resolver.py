@@ -73,6 +73,11 @@ class Decision:
     user: User | None = None
     value: str = ""
 
+    @property
+    def value_user_name(self) -> str:
+        """Nome do usuário resolvido — usado para comparar com o remetente atual."""
+        return self.user.name if self.user else ""
+
 
 @dataclass
 class UserIndex:

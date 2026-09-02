@@ -22,6 +22,8 @@ from typing import Any, Iterable
 
 from resolver import (
     DEFAULT_COMMERCIAL_CONTACT_TYPES,
+    SOURCE_CONTACTS,
+    SOURCE_CUSTOMER_FIELD,
     Contact,
     Customer,
     Decision,
@@ -94,12 +96,15 @@ def to_user(row: dict) -> User:
     )
 
 
-def to_customer(row: dict, field_name: str) -> Customer:
+def to_customer(row: dict, field_name: str, source_field: str = "Comercial") -> Customer:
+    commercial = _custom_field_value(row, source_field) or str(_first(row, "commercial", "comercial", default=""))
     return Customer(
         id=_first(row, "id", "customer_id", "id_sensedata", default=""),
         id_original=str(_first(row, "id_original", "external_id", "idOriginal", default="")),
         name=str(_first(row, "name", "customer_name", "nome", default="")),
         current_value=_custom_field_value(row, field_name),
+        commercial_name=commercial,
+        status=str(_first(row, "status", "situacao_cadastro", default="")),
     )
 
 
@@ -161,9 +166,10 @@ def run(args: argparse.Namespace) -> int:
     LOGGER.info("Carregando usuários, clientes e contatos do SenseData...")
     users = [to_user(row) for row in client.list_users()]
     customer_rows = client.list_customers()
-    contacts = [to_contact(row) for row in client.list_contacts()]
+    # Contatos só são necessários quando a fonte do comercial são os contatos do cliente.
+    contacts = [to_contact(row) for row in client.list_contacts()] if args.source == SOURCE_CONTACTS else []
 
-    customers = [to_customer(row, args.field_name) for row in customer_rows]
+    customers = [to_customer(row, args.field_name, args.source_field) for row in customer_rows]
     if args.only_customer:
         wanted = {normalize(item) for item in args.only_customer}
         customers = [
@@ -182,6 +188,7 @@ def run(args: argparse.Namespace) -> int:
         users=users,
         commercial_types=args.commercial_types,
         value_mode=args.value_mode,
+        source=args.source,
     )
 
     for key, value in summarize(decisions).items():
@@ -241,6 +248,17 @@ def run(args: argparse.Namespace) -> int:
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Atualiza o CF comercial_da_conta no SenseData.")
     parser.add_argument("--mode", choices=("dry-run", "apply", "csv"), default="dry-run")
+    parser.add_argument(
+        "--source",
+        choices=(SOURCE_CUSTOMER_FIELD, SOURCE_CONTACTS),
+        default=os.getenv("SENSEDATA_SOURCE", SOURCE_CUSTOMER_FIELD),
+        help="De onde vem o nome do comercial: campo do cliente (padrão) ou contatos ativos.",
+    )
+    parser.add_argument(
+        "--source-field",
+        default=os.getenv("SENSEDATA_SOURCE_FIELD", "Comercial"),
+        help="Campo do cliente que contém o nome do comercial (usado com --source customer_field).",
+    )
     parser.add_argument("--api-key", default=os.getenv("SENSEDATA_API_KEY", ""))
     parser.add_argument("--base-url", default=os.getenv("SENSEDATA_BASE_URL", "https://api.sensedata.io/v2"))
     parser.add_argument("--field-name", default=os.getenv("SENSEDATA_CF_NAME", "comercial_da_conta"))

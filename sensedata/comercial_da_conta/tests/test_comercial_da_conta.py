@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import csv
 import io
 import json
@@ -15,12 +16,15 @@ import urllib.error
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import backfill_from_export  # noqa: E402
 import sync  # noqa: E402
 from resolver import (  # noqa: E402
+    SOURCE_CONTACTS,
     Contact,
     Customer,
     User,
     UserIndex,
+    is_placeholder,
     normalize,
     pick_commercial_contact,
     plan_updates,
@@ -119,28 +123,28 @@ class PlanUpdatesTest(unittest.TestCase):
         self.users = [User(10, "Luciana Pasquarelli Fernandes", "luciana.fernandes@thomsonreuters.com")]
 
     def test_fills_empty_field_with_commercial_user(self):
-        [decision] = plan_updates([self.marimex], [contact()], self.users, COMMERCIAL)
+        [decision] = plan_updates([self.marimex], [contact()], self.users, COMMERCIAL, source=SOURCE_CONTACTS)
         self.assertEqual(decision.action, "update")
         self.assertEqual(decision.value, "luciana.fernandes@thomsonreuters.com")
         self.assertEqual(decision.reason, "matched_by_email")
 
     def test_skips_when_value_already_correct(self):
         customer = Customer(1, "143467-LEGAL", "MARIMEX", "LUCIANA.FERNANDES@thomsonreuters.com")
-        [decision] = plan_updates([customer], [contact()], self.users, COMMERCIAL)
+        [decision] = plan_updates([customer], [contact()], self.users, COMMERCIAL, source=SOURCE_CONTACTS)
         self.assertEqual((decision.action, decision.reason), ("skip", "up_to_date"))
 
     def test_never_clears_field_when_no_commercial_contact(self):
         customer = Customer(1, "143467-LEGAL", "MARIMEX", "luciana.fernandes@thomsonreuters.com")
-        [decision] = plan_updates([customer], [contact(type="Financeiro")], self.users, COMMERCIAL)
+        [decision] = plan_updates([customer], [contact(type="Financeiro")], self.users, COMMERCIAL, source=SOURCE_CONTACTS)
         self.assertEqual((decision.action, decision.reason), ("skip", "no_active_commercial_contact"))
         self.assertEqual(decision.value, "")
 
     def test_value_mode_name(self):
-        [decision] = plan_updates([self.marimex], [contact()], self.users, COMMERCIAL, value_mode="name")
+        [decision] = plan_updates([self.marimex], [contact()], self.users, COMMERCIAL, value_mode="name", source=SOURCE_CONTACTS)
         self.assertEqual(decision.value, "Luciana Pasquarelli Fernandes")
 
     def test_contacts_of_other_customers_are_ignored(self):
-        [decision] = plan_updates([self.marimex], [contact(customer_id=999)], self.users, COMMERCIAL)
+        [decision] = plan_updates([self.marimex], [contact(customer_id=999)], self.users, COMMERCIAL, source=SOURCE_CONTACTS)
         self.assertEqual(decision.reason, "no_active_commercial_contact")
 
     def test_summary_counts_actions_and_reasons(self):
@@ -149,6 +153,7 @@ class PlanUpdatesTest(unittest.TestCase):
             [contact(), contact(customer_id=2, type="Financeiro")],
             self.users,
             COMMERCIAL,
+            source=SOURCE_CONTACTS,
         )
         summary = summarize(decisions)
         self.assertEqual(summary["update"], 1)
@@ -187,6 +192,7 @@ class AdapterTest(unittest.TestCase):
             [contact()],
             [User(10, "Luciana Pasquarelli Fernandes", "luciana.fernandes@thomsonreuters.com")],
             COMMERCIAL,
+            source=SOURCE_CONTACTS,
         )
         rows = sync.maintenance_rows(decisions, "id_original", "comercial_da_conta")
         self.assertEqual(rows, [{"id_original": "143467-LEGAL", "comercial_da_conta": "luciana.fernandes@thomsonreuters.com"}])
@@ -197,6 +203,7 @@ class AdapterTest(unittest.TestCase):
             [contact(), contact(customer_id=2, email="ninguem@x.com", name="Ninguem")],
             [User(10, "Luciana Pasquarelli Fernandes", "luciana.fernandes@thomsonreuters.com")],
             COMMERCIAL,
+            source=SOURCE_CONTACTS,
         )
         rows = sync.pending_rows(decisions)
         self.assertEqual([row["motivo"] for row in rows], ["user_not_found"])
@@ -283,8 +290,18 @@ class FakeClient:
 
     users = [{"id": 10, "name": "Luciana Pasquarelli Fernandes", "email": "luciana.fernandes@thomsonreuters.com"}]
     customers = [
-        {"id": 1, "id_original": "143467-LEGAL", "name": "LEGAL MARIMEX", "custom_fields": []},
-        {"id": 2, "id_original": "143468-TAX", "name": "TAX MARIMEX", "custom_fields": []},
+        {
+            "id": 1,
+            "id_original": "143467-LEGAL",
+            "name": "LEGAL MARIMEX",
+            "custom_fields": [{"name": "Comercial", "value": "Luciana Pasquarelli Fernandes"}],
+        },
+        {
+            "id": 2,
+            "id_original": "143468-TAX",
+            "name": "TAX MARIMEX",
+            "custom_fields": [{"name": "Comercial", "value": "N/A AM"}],
+        },
     ]
     contacts = [
         {"customer_id": 1, "name": "Luciana Pasquarelli Fernandes", "email": "luciana.fernandes@thomsonreuters.com", "type": "Comercial", "status": "Ativo"},
@@ -337,7 +354,7 @@ class EndToEndTest(unittest.TestCase):
 
         with open(self.pending_path, encoding="utf-8") as handle:
             pending = list(csv.DictReader(handle))
-        self.assertEqual([(row["id_original"], row["motivo"]) for row in pending], [("143468-TAX", "no_active_commercial_contact")])
+        self.assertEqual([(row["id_original"], row["motivo"]) for row in pending], [("143468-TAX", "no_commercial_assigned")])
 
     def test_apply_mode_updates_only_the_resolved_customer(self):
         self.assertEqual(self.run_cli("--mode", "apply"), 0)
@@ -350,6 +367,157 @@ class EndToEndTest(unittest.TestCase):
     def test_only_customer_filters_the_run(self):
         self.assertEqual(self.run_cli("--mode", "apply", "--only-customer", "143468-TAX"), 0)
         self.assertEqual(FakeClient.last.updates, [])
+
+    def test_contacts_source_still_works(self):
+        self.assertEqual(self.run_cli("--mode", "apply", "--source", "contacts"), 0)
+        self.assertEqual(FakeClient.last.updates, [(1, "comercial_da_conta", "luciana.fernandes@thomsonreuters.com", "name")])
+
+class CustomerFieldSourceTest(unittest.TestCase):
+    """Fonte real da Thomson Reuters: o campo 'Comercial' do próprio cliente."""
+
+    def setUp(self):
+        self.users = [
+            User(196, "Luciana Pasquarelli Fernandes", "luciana.pasquarellifernandes@thomsonreuters.com"),
+            User(2467, "Lorraine Ferreira", "lorraine.ferreira@thomsonreuters.com"),
+        ]
+
+    def plan(self, commercial_name, current_value="", **kwargs):
+        customer = Customer(1, "143467-LEGAL", "LEGAL MARIMEX", current_value, commercial_name, "Ativo")
+        [decision] = plan_updates([customer], users=self.users, **kwargs)
+        return decision
+
+    def test_resolves_marimex_commercial(self):
+        decision = self.plan("Lorraine Ferreira")
+        self.assertEqual(decision.action, "update")
+        self.assertEqual(decision.value, "lorraine.ferreira@thomsonreuters.com")
+
+    def test_resolves_case_from_the_ticket(self):
+        decision = self.plan("Luciana Pasquarelli Fernandes")
+        self.assertEqual(decision.value, "luciana.pasquarellifernandes@thomsonreuters.com")
+
+    def test_accent_and_case_differences_still_match(self):
+        self.assertEqual(self.plan("LUCIANA PASQUARELLI FERNANDES").user.id, 196)
+
+    def test_na_am_is_treated_as_no_commercial(self):
+        self.assertEqual(self.plan("N/A AM").reason, "no_commercial_assigned")
+
+    def test_empty_commercial_is_skipped(self):
+        self.assertEqual(self.plan("").reason, "no_commercial_assigned")
+
+    def test_name_without_matching_user_becomes_pending(self):
+        decision = self.plan("Cintia Thomé")
+        self.assertEqual((decision.action, decision.reason), ("skip", "user_not_found"))
+
+    def test_contacts_are_not_needed_for_this_source(self):
+        self.assertEqual(self.plan("Lorraine Ferreira").contact.type, "Comercial")
+
+    def test_value_mode_name_writes_the_user_name(self):
+        self.assertEqual(self.plan("Lorraine Ferreira", value_mode="name").value, "Lorraine Ferreira")
+
+    def test_already_filled_field_is_not_rewritten(self):
+        decision = self.plan("Lorraine Ferreira", current_value="lorraine.ferreira@thomsonreuters.com")
+        self.assertEqual(decision.reason, "up_to_date")
+
+
+class PlaceholderTest(unittest.TestCase):
+    def test_recognizes_placeholders(self):
+        for value in ["", "  ", "N/A AM", "n/a", "N/A", "-", "Sem comercial"]:
+            self.assertTrue(is_placeholder(value), value)
+
+    def test_real_names_are_not_placeholders(self):
+        for value in ["Lorraine Ferreira", "Nathalia Nascimento"]:
+            self.assertFalse(is_placeholder(value), value)
+
+class BackfillFromExportTest(unittest.TestCase):
+    """Lê os exports reais (delimitador '|', BOM) e gera o arquivo de carga."""
+
+    CUSTOMERS = (
+        '\ufeff"ID Original"|"Cliente"|"Status"|"CS"|"Comercial"|"Comercial "|"ID Sensedata"\n'
+        '"143467-LEGAL"|"LEGAL MARIMEX"|"Ativo"|"Relacionamento Customer Success"|"Lorraine Ferreira"|""|"24870533"\n'
+        '"143468-TAX"|"TAX OCP DO BRASIL LTDA"|"Ativo"|"Beatriz Sanchez"|"Luciana Pasquarelli Fernandes"|""|"24870534"\n'
+        '"143449-LEGAL"|"LEGAL HOLDING FINAXIS"|"Ativo"|"Relacionamento Customer Success"|"N/A AM"|""|"24769020"\n'
+        '"142796-GTM"|"GTM HAIFA QUIMICA"|"Ativo"|"Beatriz Sanchez"|"Henrique De Oliveira"|""|"20729275"\n'
+        '"999-OLD"|"CLIENTE INATIVO"|"Inativo"|"Beatriz Sanchez"|"Lorraine Ferreira"|""|"111"\n'
+    )
+    USERS = (
+        '\ufeff"ID"|"Usuário"|"Nome"|"Perfil"|"Email"|"Status"\n'
+        '"2467"|"Lorraine Ferreira"|"Lorraine Ferreira"|"Brazil Sales - Legal"|"lorraine.ferreira@thomsonreuters.com"|"Ativo"\n'
+        '"196"|"Luciana"|"Luciana Pasquarelli Fernandes"|"Brazil Sales - GB Core"|"luciana.pasquarellifernandes@thomsonreuters.com"|"Ativo"\n'
+    )
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tmp)
+        self.customers = self._write("customers.csv", self.CUSTOMERS)
+        self.users = self._write("users.csv", self.USERS)
+        self.out = os.path.join(self.tmp, "carga.csv")
+        self.pending = os.path.join(self.tmp, "pendencias.csv")
+
+    def _write(self, name, content):
+        path = os.path.join(self.tmp, name)
+        with open(path, "w", encoding="utf-8", newline="") as handle:
+            handle.write(content)
+        return path
+
+    def run_backfill(self, *extra):
+        argv = ["--customers", self.customers, "--users", self.users, "--out", self.out, "--pending", self.pending, *extra]
+        with contextlib.redirect_stdout(io.StringIO()) as captured:
+            code = backfill_from_export.main(argv)
+        return code, captured.getvalue()
+
+    def read(self, path):
+        with open(path, encoding="utf-8", newline="") as handle:
+            return list(csv.reader(handle))
+
+    def test_generates_maintenance_file_for_active_customers(self):
+        code, _ = self.run_backfill()
+        self.assertEqual(code, 0)
+        self.assertEqual(
+            self.read(self.out),
+            [
+                ["ID Original", "comercial_da_conta"],
+                ["143467-LEGAL", "lorraine.ferreira@thomsonreuters.com"],
+                ["143468-TAX", "luciana.pasquarellifernandes@thomsonreuters.com"],
+            ],
+        )
+
+    def test_inactive_customers_are_filtered_out(self):
+        self.run_backfill()
+        self.assertNotIn("999-OLD", [row[0] for row in self.read(self.out)])
+
+    def test_status_filter_can_be_disabled(self):
+        self.run_backfill("--status", "")
+        self.assertIn("999-OLD", [row[0] for row in self.read(self.out)])
+
+    def test_pending_file_lists_reasons(self):
+        self.run_backfill()
+        rows = self.read(self.pending)[1:]
+        self.assertEqual(
+            {(row[0], row[4]) for row in rows},
+            {("143449-LEGAL", "no_commercial_assigned"), ("142796-GTM", "user_not_found")},
+        )
+
+    def test_the_two_similar_columns_are_not_confused(self):
+        """'Comercial' (texto de origem) e 'Comercial ' (CF alvo) são colunas distintas."""
+        self.run_backfill()
+        self.assertEqual(self.read(self.out)[1][1], "lorraine.ferreira@thomsonreuters.com")
+
+    def test_already_filled_customers_are_skipped(self):
+        filled = self.CUSTOMERS.replace(
+            '"Lorraine Ferreira"|""|"24870533"', '"Lorraine Ferreira"|"lorraine.ferreira@thomsonreuters.com"|"24870533"'
+        )
+        self.customers = self._write("customers_filled.csv", filled)
+        self.run_backfill()
+        self.assertNotIn("143467-LEGAL", [row[0] for row in self.read(self.out)])
+
+    def test_value_mode_name_and_sensedata_id(self):
+        self.run_backfill("--value-mode", "name", "--id-column", "ID Sensedata")
+        self.assertEqual(self.read(self.out)[1], ["24870533", "Lorraine Ferreira"])
+
+    def test_summary_is_printed(self):
+        _, output = self.run_backfill()
+        self.assertIn("update", output)
+        self.assertIn("Henrique De Oliveira", output)
 
 
 if __name__ == "__main__":

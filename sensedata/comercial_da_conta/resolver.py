@@ -18,6 +18,13 @@ from typing import Any, Iterable
 # Tipos de contato considerados "responsável comercial" (comparados normalizados).
 DEFAULT_COMMERCIAL_CONTACT_TYPES = ("comercial", "responsavel comercial", "executivo comercial", "vendas")
 
+# Valores do campo "Comercial" que significam "sem comercial atribuído".
+DEFAULT_PLACEHOLDERS = ("n/a am", "n/a", "na", "nao aplicavel", "-", "--", "sem comercial")
+
+# Fontes possíveis para o nome do comercial da conta.
+SOURCE_CUSTOMER_FIELD = "customer_field"  # campo "Comercial" do próprio cliente (padrão na TR)
+SOURCE_CONTACTS = "contacts"              # contatos ativos de tipo comercial
+
 
 def normalize(text: Any) -> str:
     """Minúsculas, sem acento e com espaços colapsados — para casar nomes/tipos."""
@@ -53,6 +60,8 @@ class Customer:
     id_original: str
     name: str
     current_value: str = ""
+    commercial_name: str = ""  # conteúdo do campo "Comercial" do cliente
+    status: str = ""
 
 
 @dataclass(frozen=True)
@@ -99,6 +108,28 @@ class UserIndex:
         return actives[0], "matched_by_name"
 
 
+def is_placeholder(value: str, placeholders: Iterable[str] = DEFAULT_PLACEHOLDERS) -> bool:
+    """Reconhece marcadores de 'sem comercial' como 'N/A AM'."""
+    normalized = normalize(value)
+    if not normalized:
+        return True
+    return normalized in {normalize(item) for item in placeholders} or normalized.startswith("n/a")
+
+
+def contact_from_customer_field(customer: Customer) -> Contact | None:
+    """Transforma o campo 'Comercial' do cliente em um contato sintético."""
+    if is_placeholder(customer.commercial_name):
+        return None
+    return Contact(
+        customer_id=customer.id,
+        name=customer.commercial_name,
+        email="",
+        type="Comercial",
+        active=True,
+        main=True,
+    )
+
+
 def is_commercial(contact: Contact, commercial_types: Iterable[str]) -> bool:
     return normalize(contact.type) in {normalize(item) for item in commercial_types}
 
@@ -133,12 +164,18 @@ def user_value(user: User, mode: str = "email") -> str:
 
 def plan_updates(
     customers: Iterable[Customer],
-    contacts: Iterable[Contact],
-    users: Iterable[User],
+    contacts: Iterable[Contact] = (),
+    users: Iterable[User] = (),
     commercial_types: Iterable[str] = DEFAULT_COMMERCIAL_CONTACT_TYPES,
     value_mode: str = "email",
+    source: str = SOURCE_CUSTOMER_FIELD,
 ) -> list[Decision]:
-    """Monta a lista de decisões (o que atualizar e o que deixar como está)."""
+    """Monta a lista de decisões (o que atualizar e o que deixar como está).
+
+    ``source`` define de onde sai o nome do comercial:
+      * ``customer_field`` – campo "Comercial" do próprio cliente (padrão);
+      * ``contacts`` – contatos ativos de tipo comercial do cliente.
+    """
     index = UserIndex.build(users)
 
     by_customer: dict[Any, list[Contact]] = defaultdict(list)
@@ -147,9 +184,15 @@ def plan_updates(
 
     decisions: list[Decision] = []
     for customer in customers:
-        contact = pick_commercial_contact(by_customer.get(customer.id, []), commercial_types)
+        if source == SOURCE_CUSTOMER_FIELD:
+            contact = contact_from_customer_field(customer)
+            missing_reason = "no_commercial_assigned"
+        else:
+            contact = pick_commercial_contact(by_customer.get(customer.id, []), commercial_types)
+            missing_reason = "no_active_commercial_contact"
+
         if contact is None:
-            decisions.append(Decision(customer, "skip", "no_active_commercial_contact"))
+            decisions.append(Decision(customer, "skip", missing_reason))
             continue
 
         user, reason = index.resolve(contact)

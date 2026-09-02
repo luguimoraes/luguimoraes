@@ -132,6 +132,12 @@ via CSV*, ação **Atualização**. Opções úteis:
 > `Comercial ` — **com espaço no fim** — que é o CF alvo. O script lê as duas
 > pelo nome exato; não renomeie as colunas do arquivo exportado.
 
+> **Limitação a confirmar:** a tela de Manutenção via CSV informa que campos
+> customizados "somente serão atualizados se forem do tipo data, número ou
+> texto". O `comercial_da_conta` é do tipo *lista de usuários*, que pode não
+> estar contemplado. Teste com uma linha antes da carga completa; se o campo não
+> for gravado, o caminho é a rotina via API (`sync.py --mode apply`).
+
 ## Rotina diária (via API)
 
 ```bash

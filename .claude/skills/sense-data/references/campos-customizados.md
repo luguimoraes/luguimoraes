@@ -1,14 +1,21 @@
 # Campos customizados
 
 ## 1. Onde e como (guia)
-Configurações > Clientes > **Campo customizado** > **Novo campo**:
-- **Título do campo** (exibição)
-- **Identidade do campo**
-- **Origem** do preenchimento
-- **Tipo do campo**
-- **Máscara** (opcional)
-- **Condição**
-- **Salvar**
+Configurações > Clientes > **Campo customizado** (no menu, "Campos Customizados") > **Novo campo** > janela **Criar campo customizado**:
+- **Título do campo** (exibição), com o link **Visualizador de nome interno** logo abaixo
+- **Descrição do campo** (a tela avisa: não é possível inserir queries no texto da descrição)
+- **Identidade do campo**: Cliente ou Contato
+- **Origem** do preenchimento: Manual, Custom Data, Integração ou Outros
+- **Tipo do Campo**: Text, Date, Number, Checklist, Select ou Lista de Usuários
+- **Máscara**: lista, opcional
+- **Condição** (caixas): Campo Alterável, Ativo, Campo Obrigatório, Edição Restrita ao Perfil, Ocultar Campo na Tabela, Sobrescrito na Integração. Na captura do guia vêm marcadas Campo Alterável, Ativo e Sobrescrito na Integração.
+- **Salvar** (ou Cancelar)
+
+**(campo)** Como as caixas de Condição se ligam às convenções abaixo:
+- campo derivado (preenchido por regra, rotina ou integração): desmarque "Campo Alterável", ou use "Edição Restrita ao Perfil";
+- campo que só uma integração alimenta: deixe "Sobrescrito na Integração" marcado; campo que a pessoa edita e a carga não deve apagar: avalie desmarcar e teste;
+- "Campo Obrigatório" só em campo objetivo (seção 2);
+- o guia não descreve o efeito exato de cada caixa: teste num campo de homologação.
 
 ## 2. Convenções (campo)
 - **Nome interno**: minúsculas, sem acento, `_` entre palavras (`dt_ultima_anotacao_cs`). Gere com `scripts/nome_interno.py`.
@@ -17,15 +24,17 @@ Configurações > Clientes > **Campo customizado** > **Novo campo**:
 - **Um campo por conceito**. Não reaproveite campo com outro significado (ex.: produto guardado no campo "Skype"): quebra filtros, relatórios e chaves de integração.
 - **Dono do campo** explícito: pessoa, regra, integração ou rotina. Derivados ficam **não editáveis**.
 
-## 3. Tipos e cuidados
-| Tipo | Uso | Cuidado |
+## 3. Tipos e cuidados (campo)
+Os nomes da primeira coluna são os da tela do guia. A leitura de Select como seleção única e de Checklist como seleção múltipla vem da prática; confirme no tenant.
+
+| Tipo na tela | Uso | Cuidado |
 |---|---|---|
-| Texto | Nomes, códigos, anotações curtas | Regra compara com diferença de maiúsculas; tamanho máximo pode existir |
-| Número inteiro | Contagens, dias | Nunca `NULL` para "não se aplica" se a tabela é ordenada por ele; use um marco (ex.: data de início do contrato) |
-| Data | Marcos | Operações "Há 'X' ou menos dias" / "Em 'X' ou menos dias"; confira fuso se vier de integração |
-| Lista de seleção única | Estados, níveis, faixas | Poucos valores; grafia exata; na base espelho, o valor pode ser texto ou objeto |
-| Lista de seleção múltipla | Marcações (ex.: produtos de referência) | Na base espelho é **array jsonb** (`["A","B"]`); filtros de texto enganam |
-| Lista de usuários | Remetente dinâmico, responsável secundário | Aceita só **usuário** da plataforma; a Manutenção via CSV pode não gravar; teste o formato na API (e-mail, nome ou id) |
+| Text | Nomes, códigos, anotações curtas | Regra compara com diferença de maiúsculas; tamanho máximo pode existir |
+| Number | Contagens, dias | Nunca `NULL` para "não se aplica" se a tabela é ordenada por ele; use um marco (ex.: data de início do contrato) |
+| Date | Marcos | Operações "Há 'X' ou menos dias" / "Em 'X' ou menos dias"; confira fuso se vier de integração |
+| Select (seleção única) | Estados, níveis, faixas | Poucos valores; grafia exata; na base espelho, o valor pode ser texto ou objeto |
+| Checklist (seleção múltipla) | Marcações (ex.: produtos de referência) | Na base espelho é **array jsonb** (`["A","B"]`); filtros de texto enganam |
+| Lista de Usuários | Remetente dinâmico, responsável secundário | Aceita só **usuário** da plataforma; a Manutenção via CSV pode não gravar; teste o formato na API (e-mail, nome ou id) |
 
 ## 4. Especificação modelo
 Use esta tabela para cada campo novo:

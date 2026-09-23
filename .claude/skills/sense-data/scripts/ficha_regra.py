@@ -55,7 +55,7 @@ EXEMPLO = {
     "acoes": [{"tipo": "Alerta", "texto": "Chamado acima do SLA", "destinatario": "CS"}],
 }
 
-REMETENTES_NATIVOS = {"cs da conta", "implementador da conta"}
+REMETENTES_NATIVOS = {"cs da conta", "csm da conta", "implementador da conta"}
 ACOES_COM_EFEITO_REPETIDO = {"email", "formulario", "sms", "whatsapp", "playbook", "atividade",
                              "alerta", "webhook", "relatorio"}
 DIARIAS = ("todos os dias", "segundas as sextas", "dias uteis")
@@ -194,9 +194,10 @@ def revisar(r):
         t = norm(a.get("tipo"))
         if t == "alerta" and not a.get("destinatario"):
             add("ERRO", "R16", "Alerta sem destinatário.")
-        if t in ("atualizacao", "atualização") and norm(a.get("campo")) in ("cs", "responsavel", "csm") \
-                and norm(a.get("transferir_atividades")) in ("", "nao", "não", "false"):
-            add("ALERTA", "R17", "Troca de responsável sem transferir as atividades em aberto: elas ficam com o CS antigo.")
+        troca_responsavel = (t in ("atualizacao", "atualização") and norm(a.get("campo")) in ("cs", "responsavel", "csm")) \
+            or t == "distribuicao automatica"
+        if troca_responsavel and norm(a.get("transferir_atividades")) in ("", "nao", "não", "false"):
+            add("ALERTA", "R17", f"{a.get('tipo')}: troca de responsável sem transferir as atividades em aberto: elas ficam com o CS antigo.")
         if t in ("atualizacao", "atualização") and norm(a.get("campo")) == "status" and norm(a.get("valor")).startswith("inativ"):
             add("INFO", "R18", "Inativação por regra altera só o status: data e motivo do cancelamento ficam para preencher à mão.")
         if t == "distribuicao automatica" and not a.get("usuarios"):

@@ -4,7 +4,7 @@
 
 Cuido de contas enterprise da SenseData na ZENVIA e construo as ferramentas que uso no dia a dia: automações, painéis e agentes de IA. Vim da engenharia civil e do planejamento de obras, e trouxe de lá o hábito de medir antes de mudar.
 
-🔗 **Links:** [linktr.ee/luguimoraes](https://linktr.ee/luguimoraes)
+🌐 **Portfólio:** [luguimoraes-portfolio.vercel.app](https://luguimoraes-portfolio.vercel.app) · 🔗 [linktr.ee/luguimoraes](https://linktr.ee/luguimoraes)
 
 ---
 
@@ -38,7 +38,7 @@ Antes disso, engenharia e planejamento de obras.
 
 #### 💬 Vamos conversar
 
-[LinkedIn](https://www.linkedin.com/in/guilhermeluis/) · [Linktree](https://linktr.ee/luguimoraes) · [Instagram](https://www.instagram.com/luguimoraes/)
+[Portfólio](https://luguimoraes-portfolio.vercel.app) · [LinkedIn](https://www.linkedin.com/in/guilhermeluis/) · [Linktree](https://linktr.ee/luguimoraes) · [Instagram](https://www.instagram.com/luguimoraes/)
 
 🗣️ Português · English · Español
 
@@ -52,6 +52,8 @@ Antes disso, engenharia e planejamento de obras.
 **Customer Success Manager** · Data · Automation · AI applied to CS
 
 I manage SenseData enterprise accounts at ZENVIA and build the tools I use every day: automations, dashboards and AI agents. I come from civil engineering and construction planning, where I learned to measure before changing anything.
+
+🌐 **Portfolio:** [luguimoraes-portfolio.vercel.app](https://luguimoraes-portfolio.vercel.app)
 
 #### 📁 Projects
 

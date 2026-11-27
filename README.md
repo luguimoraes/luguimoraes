@@ -55,9 +55,16 @@ Antes disso, engenharia e planejamento de obras.
   <img src="https://img.shields.io/badge/Midjourney-000000?style=for-the-badge" alt="Midjourney" />
 </p>
 
-**Customer Success**
+**Customer Success e gestão**
 
-`SenseData` · `SQL` · `Google Sheets` · `Trello` · `Asana`
+<p>
+  <img src="https://img.shields.io/badge/SenseData-1F4FD6?style=for-the-badge" alt="SenseData" />
+  <img src="https://img.shields.io/badge/HubSpot-FF7A59?style=for-the-badge&logo=hubspot&logoColor=white" alt="HubSpot" />
+  <img src="https://img.shields.io/badge/monday.com-FF3D57?style=for-the-badge" alt="monday.com" />
+  <img src="https://img.shields.io/badge/ClickUp-7B68EE?style=for-the-badge&logo=clickup&logoColor=white" alt="ClickUp" />
+  <img src="https://img.shields.io/badge/Asana-F06A6A?style=for-the-badge&logo=asana&logoColor=white" alt="Asana" />
+  <img src="https://img.shields.io/badge/Trello-0052CC?style=for-the-badge&logo=trello&logoColor=white" alt="Trello" />
+</p>
 
 #### 💬 Vamos conversar
 

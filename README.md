@@ -32,9 +32,32 @@ Antes disso, engenharia e planejamento de obras.
 - MBA em Data Science, Inteligência Artificial e Analytics · USP/Esalq (2026–2027)
 - Formação Engenheiro de Agentes de IA · Asimov Academy (2026–2027)
 
-#### 🛠️ Ferramentas
+#### 🛠️ Tecnologias e ferramentas
 
-`Python` · `SQL` · `Google Sheets` · `SenseData` · `Lovable` · `Claude` · `Trello` · `Asana`
+<p>
+  <img src="https://skillicons.dev/icons?i=html,py,nodejs,postgres,postman,vscode,vercel&perline=7" alt="HTML, Python, Node.js, PostgreSQL, Postman, VS Code e Vercel" />
+</p>
+
+**IA no dia a dia**
+
+<p>
+  <img src="https://img.shields.io/badge/Claude_Code-D97757?style=for-the-badge&logo=claude&logoColor=white" alt="Claude Code" />
+  <img src="https://img.shields.io/badge/Codex-000000?style=for-the-badge" alt="Codex" />
+  <img src="https://img.shields.io/badge/Gemini-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white" alt="Gemini" />
+  <img src="https://img.shields.io/badge/NotebookLM-000000?style=for-the-badge&logo=notebooklm&logoColor=white" alt="NotebookLM" />
+  <img src="https://img.shields.io/badge/Nano_Banana-FBBC04?style=for-the-badge&logo=googlegemini&logoColor=black" alt="Nano Banana" />
+  <img src="https://img.shields.io/badge/Google_Antigravity-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Google Antigravity" />
+  <img src="https://img.shields.io/badge/Perplexity-1FB8CD?style=for-the-badge&logo=perplexity&logoColor=white" alt="Perplexity" />
+  <img src="https://img.shields.io/badge/DeepSeek-4D6BFE?style=for-the-badge&logo=deepseek&logoColor=white" alt="DeepSeek" />
+  <img src="https://img.shields.io/badge/n8n-EA4B71?style=for-the-badge&logo=n8n&logoColor=white" alt="n8n" />
+  <img src="https://img.shields.io/badge/Lovable-E9407A?style=for-the-badge" alt="Lovable" />
+  <img src="https://img.shields.io/badge/Gamma-6B4EFF?style=for-the-badge" alt="Gamma" />
+  <img src="https://img.shields.io/badge/Midjourney-000000?style=for-the-badge" alt="Midjourney" />
+</p>
+
+**Customer Success**
+
+`SenseData` · `SQL` · `Google Sheets` · `Trello` · `Asana`
 
 #### 💬 Vamos conversar
 
